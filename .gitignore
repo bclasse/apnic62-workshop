@@ -1,0 +1,20 @@
+# Containerlab
+clab-*/
+*.pcap
+
+# Environment
+.env
+
+# Nokia license (provided separately by workshop organizers)
+srl-license/*
+!srl-license/README.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Active lab config symlink target
+wan-lab/configs/active/

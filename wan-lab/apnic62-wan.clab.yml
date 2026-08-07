@@ -1,0 +1,62 @@
+name: apnic62-wan
+
+topology:
+  defaults:
+    kind: nokia_srlinux
+
+  kinds:
+    nokia_srlinux:
+      type: ixr-x1b
+      image: ghcr.io/nokia/srlinux:25.3
+      license: ../srl-license/srlinux.license
+
+  nodes:
+    r1-p1:
+      startup-config: configs/active/r1-p1.cfg
+    r2-p2:
+      startup-config: configs/active/r2-p2.cfg
+    r3-p3:
+      startup-config: configs/active/r3-p3.cfg
+    r4-p4:
+      startup-config: configs/active/r4-p4.cfg
+    r5-pe1:
+      startup-config: configs/active/r5-pe1.cfg
+    r6-pe2:
+      startup-config: configs/active/r6-pe2.cfg
+    r7-pe3:
+      startup-config: configs/active/r7-pe3.cfg
+    r8-pe4:
+      startup-config: configs/active/r8-pe4.cfg
+    r9-ce1:
+      startup-config: configs/active/r9-ce1.cfg
+    r10-ce2:
+      startup-config: configs/active/r10-ce2.cfg
+    r11-ce3:
+      startup-config: configs/active/r11-ce3.cfg
+    r12-ce4:
+      startup-config: configs/active/r12-ce4.cfg
+
+  links:
+    - endpoints: ["r1-p1:e1-1", "r2-p2:e1-1"]
+    - endpoints: ["r1-p1:e1-2", "r3-p3:e1-1"]
+    - endpoints: ["r1-p1:e1-3", "r4-p4:e1-1"]
+    - endpoints: ["r1-p1:e1-4", "r5-pe1:e1-1"]
+    - endpoints: ["r1-p1:e1-5", "r6-pe2:e1-1"]
+    - endpoints: ["r2-p2:e1-2", "r3-p3:e1-2"]
+    - endpoints: ["r2-p2:e1-3", "r4-p4:e1-2"]
+    - endpoints: ["r2-p2:e1-4", "r5-pe1:e1-2"]
+    - endpoints: ["r2-p2:e1-5", "r6-pe2:e1-2"]
+    - endpoints: ["r2-p2:e1-6", "r8-pe4:e1-1"]
+    - endpoints: ["r3-p3:e1-3", "r4-p4:e1-3"]
+    - endpoints: ["r3-p3:e1-4", "r5-pe1:e1-3"]
+    - endpoints: ["r3-p3:e1-5", "r6-pe2:e1-3"]
+    - endpoints: ["r3-p3:e1-6", "r7-pe3:e1-1"]
+    - endpoints: ["r4-p4:e1-4", "r5-pe1:e1-4"]
+    - endpoints: ["r4-p4:e1-5", "r6-pe2:e1-4"]
+    - endpoints: ["r4-p4:e1-6", "r7-pe3:e1-2"]
+    - endpoints: ["r4-p4:e1-7", "r8-pe4:e1-2"]
+    - endpoints: ["r5-pe1:e1-5", "r9-ce1:e1-1"]
+    - endpoints: ["r6-pe2:e1-5", "r10-ce2:e1-1"]
+    - endpoints: ["r7-pe3:e1-3", "r9-ce1:e1-2"]
+    - endpoints: ["r8-pe4:e1-5", "r11-ce3:e1-1"]
+    - endpoints: ["r8-pe4:e1-6", "r12-ce4:e1-1"]
