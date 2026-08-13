@@ -28,7 +28,7 @@ Containerlab node names use lowercase with hyphens: `r1-p1`, `r5-pe1`, `r9-ce1`,
      └─────────┘    └─────────┘     └─────────┘
 ```
 
-P routers form a partial mesh among P and PE routers. R5-PE1 reaches the core only via R1-P1 and R2-P2 (no direct links to R3-P3 or R4-P4). R6-PE2 has no direct links to R3-P3 or R4-P4. R8-PE4 has no direct link to R2-P2. CE routers attach to PE routers (R9 dual-homed to R5 and R7 for Lab 5; R11-CE3 to R7-PE3).
+P routers form a partial mesh among P and PE routers. R5-PE1 reaches the core only via R1-P1 and R2-P2 (no direct links to R3-P3 or R4-P4). R6-PE2 has no direct links to R3-P3 or R4-P4. R8-PE4 reaches the core via R3-P3 and R4-P4 (no direct link to R2-P2). CE routers attach to PE routers (R9 dual-homed to R5 and R7 for Lab 5; R11-CE3 to R7-PE3).
 
 ## Addressing rules
 
