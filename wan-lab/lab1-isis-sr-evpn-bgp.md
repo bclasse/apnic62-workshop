@@ -206,9 +206,11 @@ ping 192.168.1.2 network-instance default -c 3
 
 ## Exercise 1.6 — IP-VRF over SR-ISIS tunnels
 
-Modify the preconfigured `ip-vrf-symm` on R5-PE1 to use SR-ISIS transport.
+Verify the preconfigured `ip-vrf-symm` on R5-PE1 uses SR-ISIS transport.
 
 ### Configuration commands
+
+The startup config already includes SR-ISIS tunnel resolution. To configure manually:
 
 ```bash
 enter candidate
@@ -228,7 +230,7 @@ ping network-instance ip-vrf-symm <remote-ip> -I 172.16.1.1
 ### Steps
 
 1. On R5-PE1, run LSP-ping to remote PE loopbacks via SR-ISIS.
-2. Modify `ip-vrf-symm` to allow **sr-isis** tunnel type for next-hop resolution.
+2. Verify `ip-vrf-symm` allows **sr-isis** tunnel type for next-hop resolution.
 3. Verify IP-VRF routes and end-to-end ping across the IP-VRF service.
 
 ---

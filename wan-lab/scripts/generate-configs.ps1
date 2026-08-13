@@ -126,13 +126,22 @@ function Build-Config($node, $lab) {
     }
 
     if ($lab -eq "lab1-start" -and $node -eq "r5-pe1") {
+        Add-SetPath $lines "interface ethernet-1/5"
+        Add-SetLeaf $lines "interface ethernet-1/5" "admin-state" "enable"
+        Add-SetLeaf $lines "interface ethernet-1/5" "vlan-tagging" "true"
+        Add-SetPath $lines "interface ethernet-1/5 ethernet"
+        Add-SetLeaf $lines "interface ethernet-1/5 ethernet" "mac-address" "00:00:00:00:02:01"
+        Add-SetPath $lines "interface ethernet-1/5 subinterface 10"
+        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "type" "bridged"
+        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "admin-state" "enable"
+        Add-SetPath $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged"
+        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
         Add-SetPath $lines "network-instance ip-vrf-symm"
         Add-SetLeaf $lines "network-instance ip-vrf-symm" "type" "ip-vrf"
         Add-SetLeaf $lines "network-instance ip-vrf-symm" "admin-state" "enable"
         Add-SetPath $lines "interface irb0"
         Add-SetLeaf $lines "interface irb0" "admin-state" "enable"
         Add-SetPath $lines "interface irb0 subinterface 1"
-        Add-SetLeaf $lines "interface irb0 subinterface 1" "type" "routed"
         Add-SetLeaf $lines "interface irb0 subinterface 1" "admin-state" "enable"
         Add-SetPath $lines "interface irb0 subinterface 1 ipv4"
         Add-SetLeaf $lines "interface irb0 subinterface 1 ipv4" "admin-state" "enable"
@@ -142,6 +151,8 @@ function Build-Config($node, $lab) {
         Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "admin-state" "enable"
         Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "encapsulation-type" "mpls"
         Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "evi" "100"
+        Add-SetPath $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution"
+        Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution" "allowed-tunnel-types" "[sr-isis]"
     }
 
     if ($lab -in @("lab4-start","lab5-start") -and $node -eq "r5-pe1") {

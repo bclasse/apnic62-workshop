@@ -91,6 +91,28 @@ if [[ "${invalid_isis}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_r5=0
+if [[ -f "${LAB_CONFIG_DIR}/r5-pe1.cfg" ]]; then
+  if grep -q "interface irb0 subinterface 1 type routed" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
+    invalid_r5=1
+  fi
+  if grep -q "encapsulation-type mpls" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null && \
+     ! grep -q "allowed-tunnel-types" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
+    invalid_r5=1
+  fi
+fi
+
+# #region agent log
+debug_log "H4" "deploy-lab.sh:validate-r5" "r5-pe1 ip-vrf startup config checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidR5Pe1\":${invalid_r5}}"
+# #endregion
+
+if [[ "${invalid_r5}" -ne 0 ]]; then
+  echo "ERROR: Invalid r5-pe1 startup config (irb0 type routed and/or MPLS without allowed-tunnel-types)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).

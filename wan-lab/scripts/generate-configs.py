@@ -110,10 +110,15 @@ def build_config(node: str, lab: str) -> str:
             ])
     if lab == "lab1-start" and node == "r5-pe1":
         lines.extend([
+            "set / interface ethernet-1/5 admin-state enable",
+            "set / interface ethernet-1/5 vlan-tagging true",
+            "set / interface ethernet-1/5 ethernet mac-address 00:00:00:00:02:01",
+            "set / interface ethernet-1/5 subinterface 10 type bridged",
+            "set / interface ethernet-1/5 subinterface 10 admin-state enable",
+            "set / interface ethernet-1/5 subinterface 10 vlan encap single-tagged vlan-id 10",
             "set / network-instance ip-vrf-symm type ip-vrf",
             "set / network-instance ip-vrf-symm admin-state enable",
             "set / interface irb0 admin-state enable",
-            "set / interface irb0 subinterface 1 type routed",
             "set / interface irb0 subinterface 1 admin-state enable",
             "set / interface irb0 subinterface 1 ipv4 admin-state enable",
             "set / interface irb0 subinterface 1 ipv4 address 172.16.1.1/24",
@@ -121,6 +126,7 @@ def build_config(node: str, lab: str) -> str:
             "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 admin-state enable",
             "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 encapsulation-type mpls",
             "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 evi 100",
+            "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution allowed-tunnel-types [sr-isis]",
         ])
     if lab in ("lab4-start", "lab5-start") and node == "r5-pe1":
         lines.extend([
