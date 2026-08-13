@@ -74,7 +74,7 @@ def build_config(node: str, lab: str) -> str:
     n = info["num"]
     lo = f"10.10.10.{n}"
     lines = [
-        f"set / system name host-name value {hostname(node)}",
+        f"set / system name host-name {hostname(node)}",
         "set / interface system0 admin-state enable",
         "set / interface system0 subinterface 0 ipv4 admin-state enable",
         f"set / interface system0 subinterface 0 ipv4 address {lo}/32",

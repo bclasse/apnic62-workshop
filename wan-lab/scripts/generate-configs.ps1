@@ -80,7 +80,7 @@ function Build-Config($node, $lab) {
     $lines = [System.Collections.Generic.List[string]]::new()
 
     Add-SetPath $lines "system"
-    Add-SetLeaf $lines "system name host-name" "value" (Get-Hostname $node)
+    $lines.Add("set / system name host-name $(Get-Hostname $node)") | Out-Null
 
     Add-SetPath $lines "interface system0"
     Add-SetLeaf $lines "interface system0" "admin-state" "enable"
