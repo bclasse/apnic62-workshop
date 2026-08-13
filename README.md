@@ -32,7 +32,7 @@ Default credentials: `admin` / `NokiaSrl1!`
 - Linux host (or WSL2) with Docker and [containerlab](https://containerlab.dev/)
 - **12× IXR-X1B** containers: ~24–36 GB RAM, 12+ vCPUs recommended
 - Nokia SR Linux **license file** (`ixr-x1b` requires a license — provided by workshop organizers)
-- SR Linux image: `ghcr.io/nokia/srlinux:25.3`
+- SR Linux image: `ghcr.io/nokia/srlinux:25.10`
 
 ## Transport policy
 

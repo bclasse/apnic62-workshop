@@ -85,7 +85,7 @@ Before starting, ensure you have:
 
 - Linux host (or WSL2) with **Docker** and **[containerlab](https://containerlab.dev/)**
 - **Nokia SR Linux license file** at `srl-license/srlinux.license` (provided by workshop organizers)
-- SR Linux image: `ghcr.io/nokia/srlinux:25.3`
+- SR Linux image: `ghcr.io/nokia/srlinux:25.10`
 - **~24–36 GB RAM** and **12+ vCPUs** for 12× IXR-X1B nodes
 - Basic understanding of IS-IS, BGP, MPLS, and EVPN concepts
 

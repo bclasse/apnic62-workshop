@@ -46,7 +46,7 @@ topology:
   kinds:
     nokia_srlinux:
       type: ixr-x1b
-      image: ghcr.io/nokia/srlinux:25.3
+      image: ghcr.io/nokia/srlinux:25.10
       license: ../srl-license/srlinux.license
       startup-config: ${configDir}/__clabNodeName__.cfg
 
