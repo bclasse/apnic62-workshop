@@ -43,6 +43,3 @@ This workshop uses **SR-ISIS** as the sole MPLS transport. **LDP is not used.**
 - [Topology and addressing](docs/topology.md)
 - [EVPN guide → SR topology router mapping](docs/router-naming.md)
 
-## Credits
-
-Lab content adapted from Nokia SR Linux *Segment Routing for WAN* and *EVPN for WAN* lab guides (v1.0). Workshop packaging by Thomas Corre.
