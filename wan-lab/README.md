@@ -166,6 +166,7 @@ clab deploy -t apnic62-wan-lab<N>.clab.yml --reconfigure
 1. Check the **Troubleshooting** section in each lab guide
 2. Verify your license file and containerlab deployment (`clab inspect`)
 3. Run `./scripts/verify-lab.sh <N>` for a quick smoke check
+4. If deploy fails, run `./scripts/collect-deploy-diagnostics.sh <N>` and check `docker logs clab-apnic62-wan-lab<N>-r1-p1`
 4. Ask your lab instructor
 
 ---

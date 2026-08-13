@@ -35,9 +35,7 @@ $nodes = @(
 
 foreach ($lab in 1..5) {
     $configDir = "configs/lab${lab}-start"
-    $nodeBlocks = $nodes | ForEach-Object {
-        "    ${_}:`n      startup-config: ${configDir}/${_}.cfg"
-    }
+    $nodeBlocks = ($nodes | ForEach-Object { "    ${_}:" }) -join "`n"
     $content = @"
 name: apnic62-wan-lab$lab
 
@@ -50,9 +48,10 @@ topology:
       type: ixr-x1b
       image: ghcr.io/nokia/srlinux:25.3
       license: ../srl-license/srlinux.license
+      startup-config: ${configDir}/__clabNodeName__.cfg
 
   nodes:
-$($nodeBlocks -join "`n")
+$nodeBlocks
 
   links:
 $($links -join "`n")

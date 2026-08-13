@@ -9,32 +9,21 @@ topology:
       type: ixr-x1b
       image: ghcr.io/nokia/srlinux:25.3
       license: ../srl-license/srlinux.license
+      startup-config: configs/lab4-start/__clabNodeName__.cfg
 
   nodes:
     r1-p1:
-      startup-config: configs/lab4-start/r1-p1.cfg
     r2-p2:
-      startup-config: configs/lab4-start/r2-p2.cfg
     r3-p3:
-      startup-config: configs/lab4-start/r3-p3.cfg
     r4-p4:
-      startup-config: configs/lab4-start/r4-p4.cfg
     r5-pe1:
-      startup-config: configs/lab4-start/r5-pe1.cfg
     r6-pe2:
-      startup-config: configs/lab4-start/r6-pe2.cfg
     r7-pe3:
-      startup-config: configs/lab4-start/r7-pe3.cfg
     r8-pe4:
-      startup-config: configs/lab4-start/r8-pe4.cfg
     r9-ce1:
-      startup-config: configs/lab4-start/r9-ce1.cfg
     r10-ce2:
-      startup-config: configs/lab4-start/r10-ce2.cfg
     r11-ce3:
-      startup-config: configs/lab4-start/r11-ce3.cfg
     r12-ce4:
-      startup-config: configs/lab4-start/r12-ce4.cfg
 
   links:
     - endpoints: ["r1-p1:e1-1", "r2-p2:e1-1"]

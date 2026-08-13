@@ -91,7 +91,20 @@ debug_log "H3" "deploy-lab.sh:deploy" "starting clab deploy" \
 # #endregion
 
 echo "==> Deploying lab ${LAB_NUM} from ${CLAB_FILE}"
-clab deploy -t "${CLAB_FILE}" --reconfigure
+set +e
+clab deploy -t "${CLAB_FILE}" --reconfigure --max-workers 4
+deploy_rc=$?
+set -e
+
+if [[ "${deploy_rc}" -ne 0 ]]; then
+  # #region agent log
+  debug_log "H5" "deploy-lab.sh:failed" "clab deploy failed" "{\"labNum\":${LAB_NUM},\"exitCode\":${deploy_rc}}"
+  # #endregion
+  echo ""
+  echo "Deploy failed (exit ${deploy_rc}). Collecting diagnostics..."
+  bash "${SCRIPT_DIR}/collect-deploy-diagnostics.sh" "${LAB_NUM}" || true
+  exit "${deploy_rc}"
+fi
 
 # #region agent log
 debug_log "H4" "deploy-lab.sh:done" "clab deploy finished" "{\"labNum\":${LAB_NUM}}"

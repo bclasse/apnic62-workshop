@@ -8,7 +8,13 @@ Per-lab SR Linux startup configs in CLI `set` format for containerlab.
 |-----------|---------|
 | `lab1-start/` … `lab5-start/` | Starting state for each workshop lab (12 nodes each) |
 
-Each lab has a matching containerlab topology file in `wan-lab/`:
+Each lab topology references startup configs via the containerlab node-name template:
+
+```yaml
+startup-config: configs/lab1-start/__clabNodeName__.cfg
+```
+
+Config files use hierarchical SR Linux CLI `set` commands (same style as [srl-telemetry-lab](https://github.com/srl-labs/srl-telemetry-lab)).
 
 | Lab | Topology file | Config directory |
 |-----|---------------|------------------|
