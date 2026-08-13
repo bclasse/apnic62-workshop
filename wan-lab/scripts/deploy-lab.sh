@@ -75,6 +75,22 @@ if [[ "${missing_cfg}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_isis=0
+if grep -q "protocols isis admin-state enable" "${LAB_CONFIG_DIR}"/*.cfg 2>/dev/null; then
+  invalid_isis=1
+fi
+
+# #region agent log
+debug_log "H3" "deploy-lab.sh:validate-isis" "check for invalid protocols isis admin-state line" \
+  "{\"labConfigDir\":\"${LAB_CONFIG_DIR}\",\"invalidIsisAdminState\":${invalid_isis}}"
+# #endregion
+
+if [[ "${invalid_isis}" -ne 0 ]]; then
+  echo "ERROR: Invalid startup config: 'protocols isis admin-state enable' is not valid SR Linux syntax."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).

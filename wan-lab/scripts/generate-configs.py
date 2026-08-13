@@ -94,7 +94,6 @@ def build_config(node: str, lab: str) -> str:
         ])
     if info["role"] in ("p", "pe"):
         lines.extend([
-            "set / network-instance default protocols isis admin-state enable",
             "set / network-instance default protocols isis instance il admin-state enable",
             f"set / network-instance default protocols isis instance il net [ {info['net']} ]",
             "set / network-instance default protocols isis instance il interface system0.0",
@@ -106,6 +105,7 @@ def build_config(node: str, lab: str) -> str:
             lines.extend([
                 f"set / network-instance default protocols isis instance il interface {ifname}.0",
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 circuit-type point-to-point",
+                f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2",
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2 metric 10",
             ])
     if lab == "lab1-start" and node == "r5-pe1":

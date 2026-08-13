@@ -110,17 +110,17 @@ function Build-Config($node, $lab) {
 
     if ($info.role -in @("p","pe")) {
         Add-SetPath $lines "network-instance default protocols isis"
-        Add-SetLeaf $lines "network-instance default protocols isis" "admin-state" "enable"
         Add-SetPath $lines "network-instance default protocols isis instance il"
         Add-SetLeaf $lines "network-instance default protocols isis instance il" "admin-state" "enable"
         Add-SetLeaf $lines "network-instance default protocols isis instance il" "net" "[ $($info.net) ]"
-        Add-SetLeaf $lines "network-instance default protocols isis instance il" "interface" "system0.0"
+        Add-SetPath $lines "network-instance default protocols isis instance il interface system0.0"
         Add-SetLeaf $lines "network-instance default protocols isis instance il interface system0.0" "passive" "true"
         foreach ($peer in (Get-Neighbors $node)) {
             $port = Get-PortFor $node $peer
             $if = "ethernet-1/$port"
-            Add-SetLeaf $lines "network-instance default protocols isis instance il" "interface" "$if.0"
+            Add-SetPath $lines "network-instance default protocols isis instance il interface $if.0"
             Add-SetLeaf $lines "network-instance default protocols isis instance il interface $if.0" "circuit-type" "point-to-point"
+            Add-SetPath $lines "network-instance default protocols isis instance il interface $if.0 level 2"
             Add-SetLeaf $lines "network-instance default protocols isis instance il interface $if.0 level 2" "metric" "10"
         }
     }
