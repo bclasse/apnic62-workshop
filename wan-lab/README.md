@@ -119,7 +119,7 @@ ssh admin@r9-ce1
 
 4. Follow [Lab 1](lab1-isis-sr-evpn-bgp.md) and continue in order through Lab 5.
 
-> **💡 Tip:** Load each lab's startup config by running `./scripts/deploy-lab.sh <N>` before starting that lab.
+> **💡 Tip:** Each lab has its own topology file (`apnic62-wan-lab<N>.clab.yml`) and config directory (`configs/lab<N>-start/`). Run `./scripts/deploy-lab.sh <N>` before starting that lab.
 
 ---
 
@@ -145,8 +145,10 @@ ssh admin@r9-ce1
 
 ```bash
 cd wan-lab
-clab destroy -t apnic62-wan.clab.yml --cleanup
 ./scripts/deploy-lab.sh <lab-number>
+# or manually:
+clab destroy -t apnic62-wan-lab<N>.clab.yml --cleanup
+clab deploy -t apnic62-wan-lab<N>.clab.yml --reconfigure
 ```
 
 ---
@@ -163,7 +165,7 @@ clab destroy -t apnic62-wan.clab.yml --cleanup
 
 1. Check the **Troubleshooting** section in each lab guide
 2. Verify your license file and containerlab deployment (`clab inspect`)
-3. Run `./scripts/verify-lab.sh` for a quick smoke check
+3. Run `./scripts/verify-lab.sh <N>` for a quick smoke check
 4. Ask your lab instructor
 
 ---

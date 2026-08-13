@@ -135,7 +135,7 @@ def build_config(node: str, lab: str) -> str:
 
 
 def main() -> None:
-    for lab in ("base", "lab1-start", "lab2-start", "lab3-start", "lab4-start", "lab5-start"):
+    for lab in ("lab1-start", "lab2-start", "lab3-start", "lab4-start", "lab5-start"):
         out = CONFIGS / lab
         out.mkdir(parents=True, exist_ok=True)
         for node in NODES:

@@ -131,7 +131,7 @@ function Build-Config($node, $lab) {
     return ($lines -join "`n") + "`n"
 }
 
-foreach ($lab in @("base","lab1-start","lab2-start","lab3-start","lab4-start","lab5-start")) {
+foreach ($lab in @("lab1-start","lab2-start","lab3-start","lab4-start","lab5-start")) {
     $out = Join-Path $Configs $lab
     New-Item -ItemType Directory -Force -Path $out | Out-Null
     foreach ($node in $Nodes.Keys) {

@@ -7,8 +7,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WAN_LAB_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${WAN_LAB_DIR}/.." && pwd)"
 LICENSE_FILE="${REPO_ROOT}/srl-license/srlinux.license"
-CLAB_FILE="${WAN_LAB_DIR}/apnic62-wan.clab.yml"
-ACTIVE_DIR="${WAN_LAB_DIR}/configs/active"
+CLAB_FILE="${WAN_LAB_DIR}/apnic62-wan-lab${LAB_NUM}.clab.yml"
+LAB_CONFIG_DIR="${WAN_LAB_DIR}/configs/lab${LAB_NUM}-start"
+DEBUG_LOG="${REPO_ROOT}/debug-984e35.log"
+
+# #region agent log
+debug_log() {
+  local hypothesis_id="$1"
+  local location="$2"
+  local message="$3"
+  local data_json="$4"
+  printf '{"sessionId":"984e35","runId":"deploy","hypothesisId":"%s","location":"%s","message":"%s","data":%s,"timestamp":%s}\n' \
+    "$hypothesis_id" "$location" "$message" "$data_json" "$(date +%s%3N)" >> "${DEBUG_LOG}"
+}
+# #endregion
 
 usage() {
   echo "Usage: $0 <lab-number>"
@@ -21,6 +33,11 @@ usage() {
 [[ -n "${LAB_NUM}" ]] || usage
 [[ "${LAB_NUM}" =~ ^[1-5]$ ]] || usage
 
+# #region agent log
+debug_log "H1" "deploy-lab.sh:paths" "resolved deploy paths" \
+  "{\"wanLabDir\":\"${WAN_LAB_DIR}\",\"clabFile\":\"${CLAB_FILE}\",\"labConfigDir\":\"${LAB_CONFIG_DIR}\"}"
+# #endregion
+
 if [[ ! -f "${LICENSE_FILE}" ]]; then
   echo "ERROR: Nokia license file not found at:"
   echo "  ${LICENSE_FILE}"
@@ -29,27 +46,56 @@ if [[ ! -f "${LICENSE_FILE}" ]]; then
   exit 1
 fi
 
-LAB_CONFIG_DIR="${WAN_LAB_DIR}/configs/lab${LAB_NUM}-start"
-if [[ ! -d "${LAB_CONFIG_DIR}" ]]; then
-  echo "ERROR: Lab config directory not found: ${LAB_CONFIG_DIR}"
-  echo "Run: python3 scripts/generate-configs.py"
+if [[ ! -f "${CLAB_FILE}" ]]; then
+  echo "ERROR: Containerlab topology file not found: ${CLAB_FILE}"
+  echo "Run: powershell -File scripts/generate-clab-yml.ps1 (or use committed .clab.yml files)"
   exit 1
 fi
 
-echo "==> Preparing active configs from lab${LAB_NUM}-start"
-mkdir -p "${ACTIVE_DIR}"
-rm -f "${ACTIVE_DIR}"/*.cfg
-cp "${LAB_CONFIG_DIR}"/*.cfg "${ACTIVE_DIR}/"
+if [[ ! -d "${LAB_CONFIG_DIR}" ]]; then
+  echo "ERROR: Lab config directory not found: ${LAB_CONFIG_DIR}"
+  exit 1
+fi
+
+missing_cfg=0
+for node in r1-p1 r2-p2 r3-p3 r4-p4 r5-pe1 r6-pe2 r7-pe3 r8-pe4 r9-ce1 r10-ce2 r11-ce3 r12-ce4; do
+  cfg="${LAB_CONFIG_DIR}/${node}.cfg"
+  if [[ ! -f "${cfg}" ]]; then
+    echo "ERROR: Missing startup config: ${cfg}"
+    missing_cfg=1
+  fi
+done
+
+# #region agent log
+debug_log "H2" "deploy-lab.sh:configs" "startup config presence check" \
+  "{\"labConfigDir\":\"${LAB_CONFIG_DIR}\",\"missingCfg\":${missing_cfg},\"sampleCfg\":\"${LAB_CONFIG_DIR}/r1-p1.cfg\",\"sampleExists\":$([[ -f \"${LAB_CONFIG_DIR}/r1-p1.cfg\" ]] && echo true || echo false)}"
+# #endregion
+
+if [[ "${missing_cfg}" -ne 0 ]]; then
+  exit 1
+fi
 
 cd "${WAN_LAB_DIR}"
 
-if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q '^clab-apnic62-wan-'; then
-  echo "==> Destroying existing lab"
-  clab destroy -t "${CLAB_FILE}" --cleanup || true
-fi
+# Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
+for n in 1 2 3 4 5; do
+  prev="${WAN_LAB_DIR}/apnic62-wan-lab${n}.clab.yml"
+  if [[ -f "${prev}" ]]; then
+    clab destroy -t "${prev}" --cleanup 2>/dev/null || true
+  fi
+done
 
-echo "==> Deploying lab ${LAB_NUM}"
+# #region agent log
+debug_log "H3" "deploy-lab.sh:deploy" "starting clab deploy" \
+  "{\"clabFile\":\"${CLAB_FILE}\",\"cwd\":\"$(pwd)\"}"
+# #endregion
+
+echo "==> Deploying lab ${LAB_NUM} from ${CLAB_FILE}"
 clab deploy -t "${CLAB_FILE}" --reconfigure
+
+# #region agent log
+debug_log "H4" "deploy-lab.sh:done" "clab deploy finished" "{\"labNum\":${LAB_NUM}}"
+# #endregion
 
 echo ""
 echo "Lab ${LAB_NUM} deployed. Connect to student routers:"

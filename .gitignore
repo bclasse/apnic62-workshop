@@ -15,6 +15,3 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
-
-# Active lab config symlink target
-wan-lab/configs/active/

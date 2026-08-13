@@ -1,4 +1,4 @@
-name: apnic62-wan
+name: apnic62-wan-lab4
 
 topology:
   defaults:
@@ -12,29 +12,29 @@ topology:
 
   nodes:
     r1-p1:
-      startup-config: configs/active/r1-p1.cfg
+      startup-config: configs/lab4-start/r1-p1.cfg
     r2-p2:
-      startup-config: configs/active/r2-p2.cfg
+      startup-config: configs/lab4-start/r2-p2.cfg
     r3-p3:
-      startup-config: configs/active/r3-p3.cfg
+      startup-config: configs/lab4-start/r3-p3.cfg
     r4-p4:
-      startup-config: configs/active/r4-p4.cfg
+      startup-config: configs/lab4-start/r4-p4.cfg
     r5-pe1:
-      startup-config: configs/active/r5-pe1.cfg
+      startup-config: configs/lab4-start/r5-pe1.cfg
     r6-pe2:
-      startup-config: configs/active/r6-pe2.cfg
+      startup-config: configs/lab4-start/r6-pe2.cfg
     r7-pe3:
-      startup-config: configs/active/r7-pe3.cfg
+      startup-config: configs/lab4-start/r7-pe3.cfg
     r8-pe4:
-      startup-config: configs/active/r8-pe4.cfg
+      startup-config: configs/lab4-start/r8-pe4.cfg
     r9-ce1:
-      startup-config: configs/active/r9-ce1.cfg
+      startup-config: configs/lab4-start/r9-ce1.cfg
     r10-ce2:
-      startup-config: configs/active/r10-ce2.cfg
+      startup-config: configs/lab4-start/r10-ce2.cfg
     r11-ce3:
-      startup-config: configs/active/r11-ce3.cfg
+      startup-config: configs/lab4-start/r11-ce3.cfg
     r12-ce4:
-      startup-config: configs/active/r12-ce4.cfg
+      startup-config: configs/lab4-start/r12-ce4.cfg
 
   links:
     - endpoints: ["r1-p1:e1-1", "r2-p2:e1-1"]
