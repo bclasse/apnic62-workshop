@@ -73,6 +73,23 @@ function Get-Hostname($node) {
     return "$($p[0].ToUpper())-$($p[1].ToUpper())"
 }
 
+function Test-UsesVlanAccess($node, $peer, $lab) {
+    if ($node -eq "r5-pe1" -and $peer -eq "r9-ce1" -and $lab -in @("lab1-start","lab4-start","lab5-start")) { return $true }
+    if ($node -eq "r9-ce1" -and $peer -eq "r5-pe1" -and $lab -eq "lab1-start") { return $true }
+    return $false
+}
+
+function Add-PeCeVlanAccess($lines) {
+    Add-SetLeaf $lines "interface ethernet-1/5" "vlan-tagging" "true"
+    Add-SetPath $lines "interface ethernet-1/5 ethernet"
+    Add-SetLeaf $lines "interface ethernet-1/5 ethernet" "mac-address" "00:00:00:00:02:01"
+    Add-SetPath $lines "interface ethernet-1/5 subinterface 10"
+    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "type" "bridged"
+    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "admin-state" "enable"
+    Add-SetPath $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged"
+    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
+}
+
 function Build-Config($node, $lab) {
     $info = $Nodes[$node]
     $n = $info.num
@@ -97,9 +114,10 @@ function Build-Config($node, $lab) {
     foreach ($peer in (Get-Neighbors $node)) {
         $port = Get-PortFor $node $peer
         $if = "ethernet-1/$port"
-        $ip = Get-LinkIp $n $Nodes[$peer].num
         Add-SetPath $lines "interface $if"
         Add-SetLeaf $lines "interface $if" "admin-state" "enable"
+        if (Test-UsesVlanAccess $node $peer $lab) { continue }
+        $ip = Get-LinkIp $n $Nodes[$peer].num
         Add-SetPath $lines "interface $if subinterface 0"
         Add-SetLeaf $lines "interface $if subinterface 0" "admin-state" "enable"
         Add-SetPath $lines "interface $if subinterface 0 ipv4"
@@ -116,6 +134,7 @@ function Build-Config($node, $lab) {
         Add-SetPath $lines "network-instance default protocols isis instance il interface system0.0"
         Add-SetLeaf $lines "network-instance default protocols isis instance il interface system0.0" "passive" "true"
         foreach ($peer in (Get-Neighbors $node)) {
+            if (Test-UsesVlanAccess $node $peer $lab) { continue }
             $port = Get-PortFor $node $peer
             $if = "ethernet-1/$port"
             Add-SetPath $lines "network-instance default protocols isis instance il interface $if.0"
@@ -126,16 +145,7 @@ function Build-Config($node, $lab) {
     }
 
     if ($lab -eq "lab1-start" -and $node -eq "r5-pe1") {
-        Add-SetPath $lines "interface ethernet-1/5"
-        Add-SetLeaf $lines "interface ethernet-1/5" "admin-state" "enable"
-        Add-SetLeaf $lines "interface ethernet-1/5" "vlan-tagging" "true"
-        Add-SetPath $lines "interface ethernet-1/5 ethernet"
-        Add-SetLeaf $lines "interface ethernet-1/5 ethernet" "mac-address" "00:00:00:00:02:01"
-        Add-SetPath $lines "interface ethernet-1/5 subinterface 10"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "type" "bridged"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "admin-state" "enable"
-        Add-SetPath $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
+        Add-PeCeVlanAccess $lines
         Add-SetPath $lines "network-instance ip-vrf-symm"
         Add-SetLeaf $lines "network-instance ip-vrf-symm" "type" "ip-vrf"
         Add-SetLeaf $lines "network-instance ip-vrf-symm" "admin-state" "enable"
@@ -156,16 +166,7 @@ function Build-Config($node, $lab) {
     }
 
     if ($lab -in @("lab4-start","lab5-start") -and $node -eq "r5-pe1") {
-        Add-SetPath $lines "interface ethernet-1/5"
-        Add-SetLeaf $lines "interface ethernet-1/5" "admin-state" "enable"
-        Add-SetLeaf $lines "interface ethernet-1/5" "vlan-tagging" "true"
-        Add-SetPath $lines "interface ethernet-1/5 ethernet"
-        Add-SetLeaf $lines "interface ethernet-1/5 ethernet" "mac-address" "00:00:00:00:02:01"
-        Add-SetPath $lines "interface ethernet-1/5 subinterface 10"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "type" "bridged"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "admin-state" "enable"
-        Add-SetPath $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged"
-        Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
+        Add-PeCeVlanAccess $lines
     }
 
     return (($lines -join "`n") + "`n")

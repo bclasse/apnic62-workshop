@@ -69,6 +69,24 @@ def hostname(node: str) -> str:
     return f"{parts[0].upper()}-{parts[1].upper()}"
 
 
+def uses_vlan_access(node: str, peer: str, lab: str) -> bool:
+    if node == "r5-pe1" and peer == "r9-ce1" and lab in ("lab1-start", "lab4-start", "lab5-start"):
+        return True
+    if node == "r9-ce1" and peer == "r5-pe1" and lab == "lab1-start":
+        return True
+    return False
+
+
+def pe_ce_vlan_access_lines() -> list[str]:
+    return [
+        "set / interface ethernet-1/5 vlan-tagging true",
+        "set / interface ethernet-1/5 ethernet mac-address 00:00:00:00:02:01",
+        "set / interface ethernet-1/5 subinterface 10 type bridged",
+        "set / interface ethernet-1/5 subinterface 10 admin-state enable",
+        "set / interface ethernet-1/5 subinterface 10 vlan encap single-tagged vlan-id 10",
+    ]
+
+
 def build_config(node: str, lab: str) -> str:
     info = NODES[node]
     n = info["num"]
@@ -84,9 +102,11 @@ def build_config(node: str, lab: str) -> str:
     for peer in neighbors(node):
         port = port_for(node, peer)
         ifname = f"ethernet-1/{port}"
+        lines.append(f"set / interface {ifname} admin-state enable")
+        if uses_vlan_access(node, peer, lab):
+            continue
         ip = link_ip(n, NODES[peer]["num"])
         lines.extend([
-            f"set / interface {ifname} admin-state enable",
             f"set / interface {ifname} subinterface 0 admin-state enable",
             f"set / interface {ifname} subinterface 0 ipv4 admin-state enable",
             f"set / interface {ifname} subinterface 0 ipv4 address {ip}",
@@ -100,6 +120,8 @@ def build_config(node: str, lab: str) -> str:
             "set / network-instance default protocols isis instance il interface system0.0 passive true",
         ])
         for peer in neighbors(node):
+            if uses_vlan_access(node, peer, lab):
+                continue
             port = port_for(node, peer)
             ifname = f"ethernet-1/{port}"
             lines.extend([
@@ -109,13 +131,8 @@ def build_config(node: str, lab: str) -> str:
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2 metric 10",
             ])
     if lab == "lab1-start" and node == "r5-pe1":
+        lines.extend(pe_ce_vlan_access_lines())
         lines.extend([
-            "set / interface ethernet-1/5 admin-state enable",
-            "set / interface ethernet-1/5 vlan-tagging true",
-            "set / interface ethernet-1/5 ethernet mac-address 00:00:00:00:02:01",
-            "set / interface ethernet-1/5 subinterface 10 type bridged",
-            "set / interface ethernet-1/5 subinterface 10 admin-state enable",
-            "set / interface ethernet-1/5 subinterface 10 vlan encap single-tagged vlan-id 10",
             "set / network-instance ip-vrf-symm type ip-vrf",
             "set / network-instance ip-vrf-symm admin-state enable",
             "set / interface irb0 admin-state enable",
@@ -129,14 +146,7 @@ def build_config(node: str, lab: str) -> str:
             "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution allowed-tunnel-types [sr-isis]",
         ])
     if lab in ("lab4-start", "lab5-start") and node == "r5-pe1":
-        lines.extend([
-            "set / interface ethernet-1/5 admin-state enable",
-            "set / interface ethernet-1/5 vlan-tagging true",
-            "set / interface ethernet-1/5 ethernet mac-address 00:00:00:00:02:01",
-            "set / interface ethernet-1/5 subinterface 10 type bridged",
-            "set / interface ethernet-1/5 subinterface 10 admin-state enable",
-            "set / interface ethernet-1/5 subinterface 10 vlan encap single-tagged vlan-id 10",
-        ])
+        lines.extend(pe_ce_vlan_access_lines())
     return "\n".join(lines) + "\n"
 
 
