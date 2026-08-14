@@ -78,6 +78,23 @@ function Test-UsesVlanAccess($node, $peer, $lab) {
     return $false
 }
 
+function Add-MplsSrLabelRanges($lines) {
+    Add-SetPath $lines "system mpls"
+    Add-SetPath $lines "system mpls label-ranges static srgb-range-1"
+    Add-SetLeaf $lines "system mpls label-ranges static srgb-range-1" "shared" "true"
+    Add-SetLeaf $lines "system mpls label-ranges static srgb-range-1" "start-label" "16001"
+    Add-SetLeaf $lines "system mpls label-ranges static srgb-range-1" "end-label" "16999"
+    Add-SetPath $lines "system mpls label-ranges dynamic srlb-dynamic-isis"
+    Add-SetLeaf $lines "system mpls label-ranges dynamic srlb-dynamic-isis" "start-label" "15001"
+    Add-SetLeaf $lines "system mpls label-ranges dynamic srlb-dynamic-isis" "end-label" "15999"
+}
+
+function Test-IncludeMplsSrLabelRanges($node, $lab) {
+    if ($Nodes[$node].role -notin @("p","pe")) { return $false }
+    if ($lab -eq "lab1-start" -and $node -in @("r1-p1","r5-pe1")) { return $false }
+    return $true
+}
+
 function Add-PeCeVlanAccess($lines) {
     Add-SetLeaf $lines "interface ethernet-1/2" "vlan-tagging" "true"
     Add-SetPath $lines "interface ethernet-1/2 ethernet"
@@ -143,6 +160,10 @@ function Build-Config($node, $lab) {
         }
     }
 
+    if (Test-IncludeMplsSrLabelRanges $node $lab) {
+        Add-MplsSrLabelRanges $lines
+    }
+
     if ($lab -eq "lab1-start" -and $node -eq "r5-pe1") {
         Add-PeCeVlanAccess $lines
         Add-SetPath $lines "network-instance ip-vrf-symm"
@@ -193,8 +214,12 @@ foreach ($l in $Links) {
     if ($l[0] -eq "r8-pe4") { $r8Map["ethernet-1/$($l[1])"] = $l[2] }
     elseif ($l[2] -eq "r8-pe4") { $r8Map["ethernet-1/$($l[3])"] = $l[0] }
 }
+$mplsNodes = @{}
+foreach ($lab in @("lab1-start","lab2-start")) {
+    $mplsNodes[$lab] = @($Nodes.Keys | Where-Object { Test-IncludeMplsSrLabelRanges $_ $lab })
+}
 $ts = [int64](([datetime]::UtcNow) - [datetime]'1970-01-01').TotalMilliseconds
-$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-r8"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "r8-pe4 port map from LINKS"; data = @{ mapping = $r8Map }; timestamp = $ts } | ConvertTo-Json -Compress
+$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-mpls"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "mpls label-range preconfig nodes"; data = @{ nodes = $mplsNodes }; timestamp = $ts } | ConvertTo-Json -Compress
 Add-Content -Path $logPath -Value $logEntry -Encoding UTF8
 # #endregion
 

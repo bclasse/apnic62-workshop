@@ -76,6 +76,21 @@ def uses_vlan_access(node: str, peer: str, lab: str) -> bool:
     return False
 
 
+def mpls_sr_label_range_lines() -> list[str]:
+    return [
+        "set / system mpls label-ranges static srgb-range-1 shared true start-label 16001 end-label 16999",
+        "set / system mpls label-ranges dynamic srlb-dynamic-isis start-label 15001 end-label 15999",
+    ]
+
+
+def include_mpls_sr_label_ranges(node: str, lab: str) -> bool:
+    if NODES[node]["role"] not in ("p", "pe"):
+        return False
+    if lab == "lab1-start" and node in ("r1-p1", "r5-pe1"):
+        return False
+    return True
+
+
 def pe_ce_vlan_access_lines() -> list[str]:
     return [
         "set / interface ethernet-1/2 vlan-tagging true",
@@ -129,6 +144,8 @@ def build_config(node: str, lab: str) -> str:
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2",
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2 metric 10",
             ])
+    if include_mpls_sr_label_ranges(node, lab):
+        lines.extend(mpls_sr_label_range_lines())
     if lab == "lab1-start" and node == "r5-pe1":
         lines.extend(pe_ce_vlan_access_lines())
         lines.extend([
