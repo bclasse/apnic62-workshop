@@ -3,10 +3,10 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
 $links = @(
-    '    - endpoints: ["r1-p1:e1-1", "r2-p2:e1-1"]',
-    '    - endpoints: ["r1-p1:e1-2", "r3-p3:e1-1"]',
-    '    - endpoints: ["r1-p1:e1-3", "r4-p4:e1-1"]',
-    '    - endpoints: ["r1-p1:e1-4", "r5-pe1:e1-1"]',
+    '    - endpoints: ["r1-p1:e1-1", "r5-pe1:e1-1"]',
+    '    - endpoints: ["r1-p1:e1-2", "r2-p2:e1-1"]',
+    '    - endpoints: ["r1-p1:e1-3", "r3-p3:e1-1"]',
+    '    - endpoints: ["r1-p1:e1-4", "r4-p4:e1-1"]',
     '    - endpoints: ["r1-p1:e1-5", "r6-pe2:e1-1"]',
     '    - endpoints: ["r2-p2:e1-2", "r3-p3:e1-2"]',
     '    - endpoints: ["r2-p2:e1-3", "r4-p4:e1-2"]',

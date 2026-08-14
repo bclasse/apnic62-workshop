@@ -48,6 +48,16 @@ Example: R5-PE1 → `10.10.10.5/32`
 
 Example: link between R2 and R6 — on R2: `10.2.6.2/27`, on R6: `10.2.6.6/27`
 
+### R1-P1 interface mapping (SR lab guide Figure 2)
+
+| Interface | Peer | Subnet |
+|-----------|------|--------|
+| ethernet-1/1 | R5-PE1 | 10.1.5.0/27 |
+| ethernet-1/2 | R2-P2 | 10.1.2.0/27 |
+| ethernet-1/3 | R3-P3 | 10.1.3.0/27 |
+| ethernet-1/4 | R4-P4 | 10.1.4.0/27 |
+| ethernet-1/5 | R6-PE2 | 10.1.6.0/27 |
+
 ## Underlay
 
 - **IGP:** IS-IS level-2 on all P and PE routers

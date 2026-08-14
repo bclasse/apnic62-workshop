@@ -117,6 +117,30 @@ if [[ "${invalid_r5}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_r1=0
+if [[ -f "${LAB_CONFIG_DIR}/r1-p1.cfg" ]]; then
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.5.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
+    invalid_r1=1
+  fi
+  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.1.2.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
+    invalid_r1=1
+  fi
+  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.2.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
+    invalid_r1=1
+  fi
+fi
+
+# #region agent log
+debug_log "H6" "deploy-lab.sh:validate-r1" "r1-p1 SR guide interface mapping checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidR1P1\":${invalid_r1}}"
+# #endregion
+
+if [[ "${invalid_r1}" -ne 0 ]]; then
+  echo "ERROR: Invalid r1-p1 startup config (ethernet-1/1 must be 10.1.5.1 toward R5-PE1 per SR lab guide)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
