@@ -69,11 +69,11 @@ Example: link between R2 and R6 — on R2: `10.2.6.2/27`, on R6: `10.2.6.6/27`
 
 | Interface | Peer |
 |-----------|------|
-| ethernet-1/1 | R1-P1 |
-| ethernet-1/2 | R3-P3 |
+| ethernet-1/1 | R6-PE2 |
+| ethernet-1/2 | R1-P1 |
 | ethernet-1/3 | R4-P4 |
-| ethernet-1/4 | R5-PE1 |
-| ethernet-1/5 | R6-PE2 |
+| ethernet-1/4 | R3-P3 |
+| ethernet-1/5 | R5-PE1 |
 
 ### R3-P3 / R4-P4 / R7-PE3 / R8-PE4 (Figure 2)
 

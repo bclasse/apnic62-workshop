@@ -20,10 +20,10 @@ $Nodes = @{
 }
 
 $Links = @(
-    @("r1-p1",1,"r5-pe1",1), @("r1-p1",2,"r2-p2",1), @("r1-p1",3,"r3-p3",1),
+    @("r1-p1",1,"r5-pe1",1), @("r1-p1",2,"r2-p2",2), @("r1-p1",3,"r3-p3",1),
     @("r1-p1",4,"r4-p4",1), @("r1-p1",5,"r6-pe2",1),
-    @("r2-p2",2,"r3-p3",2), @("r2-p2",3,"r4-p4",2), @("r2-p2",4,"r5-pe1",5),
-    @("r2-p2",5,"r6-pe2",5),
+    @("r2-p2",1,"r6-pe2",5), @("r2-p2",4,"r3-p3",2), @("r2-p2",3,"r4-p4",2),
+    @("r2-p2",5,"r5-pe1",5),
     @("r3-p3",3,"r4-p4",3), @("r3-p3",4,"r8-pe4",1),
     @("r3-p3",6,"r7-pe3",1),
     @("r4-p4",6,"r7-pe3",2),
@@ -173,9 +173,20 @@ function Build-Config($node, $lab) {
     return (($lines -join "`n") + "`n")
 }
 
+# #region agent log
+$logPath = Join-Path (Split-Path -Parent $Root) "debug-984e35.log"
+$r2Map = @{}
+foreach ($l in $Links) {
+    if ($l[0] -eq "r2-p2") { $r2Map["ethernet-1/$($l[1])"] = $l[2] }
+    elseif ($l[2] -eq "r2-p2") { $r2Map["ethernet-1/$($l[3])"] = $l[0] }
+}
+$ts = [int64](([datetime]::UtcNow) - [datetime]'1970-01-01').TotalMilliseconds
+$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-r2"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "r2-p2 port map from LINKS"; data = @{ mapping = $r2Map }; timestamp = $ts } | ConvertTo-Json -Compress
+Add-Content -Path $logPath -Value $logEntry -Encoding UTF8
+# #endregion
+
 foreach ($lab in @("lab1-start","lab2-start","lab3-start","lab4-start","lab5-start")) {
     $out = Join-Path $Configs $lab
-    New-Item -ItemType Directory -Force -Path $out | Out-Null
     foreach ($node in $Nodes.Keys) {
         $path = Join-Path $out "$node.cfg"
         [System.IO.File]::WriteAllText($path, (Build-Config $node $lab), $Utf8NoBom)
