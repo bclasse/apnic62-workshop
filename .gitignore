@@ -2,6 +2,9 @@
 clab-*/
 *.pcap
 
+# Runtime startup-config copies (deploy-lab.sh)
+wan-lab/configs/active/
+
 # Environment
 .env
 
