@@ -114,10 +114,16 @@ fi
 
 invalid_r6=0
 if [[ -f "${LAB_CONFIG_DIR}/r6-pe2.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
     invalid_r6=1
   fi
-  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
+  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.1.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
+    invalid_r6=1
+  fi
+  if grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
+    invalid_r6=1
+  fi
+  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
     invalid_r6=1
   fi
 fi
@@ -134,7 +140,7 @@ if [[ "${invalid_r5}" -ne 0 ]]; then
 fi
 
 if [[ "${invalid_r6}" -ne 0 ]]; then
-  echo "ERROR: Invalid r6-pe2 startup config (R2 link must be on ethernet-1/5 per SR lab guide)."
+  echo "ERROR: Invalid r6-pe2 startup config (R2 on ethernet-1/1 and R1 on ethernet-1/5 per SR lab guide)."
   echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
   exit 1
 fi

@@ -21,8 +21,8 @@ $Nodes = @{
 
 $Links = @(
     @("r1-p1",1,"r5-pe1",1), @("r1-p1",2,"r2-p2",2), @("r1-p1",3,"r3-p3",3),
-    @("r1-p1",4,"r4-p4",4), @("r1-p1",5,"r6-pe2",1),
-    @("r2-p2",1,"r6-pe2",5), @("r2-p2",4,"r3-p3",4), @("r2-p2",3,"r4-p4",3),
+    @("r1-p1",4,"r4-p4",4), @("r1-p1",5,"r6-pe2",5),
+    @("r2-p2",1,"r6-pe2",1), @("r2-p2",4,"r3-p3",4), @("r2-p2",3,"r4-p4",3),
     @("r2-p2",5,"r5-pe1",5),
     @("r3-p3",1,"r7-pe3",1), @("r3-p3",2,"r4-p4",2), @("r3-p3",5,"r8-pe4",1),
     @("r4-p4",5,"r7-pe3",2), @("r4-p4",1,"r8-pe4",2),
@@ -176,6 +176,7 @@ $logPath = Join-Path (Split-Path -Parent $Root) "debug-984e35.log"
 $r2Map = @{}
 $r3Map = @{}
 $r4Map = @{}
+$r6Map = @{}
 foreach ($l in $Links) {
     if ($l[0] -eq "r2-p2") { $r2Map["ethernet-1/$($l[1])"] = $l[2] }
     elseif ($l[2] -eq "r2-p2") { $r2Map["ethernet-1/$($l[3])"] = $l[0] }
@@ -183,9 +184,11 @@ foreach ($l in $Links) {
     elseif ($l[2] -eq "r3-p3") { $r3Map["ethernet-1/$($l[3])"] = $l[0] }
     if ($l[0] -eq "r4-p4") { $r4Map["ethernet-1/$($l[1])"] = $l[2] }
     elseif ($l[2] -eq "r4-p4") { $r4Map["ethernet-1/$($l[3])"] = $l[0] }
+    if ($l[0] -eq "r6-pe2") { $r6Map["ethernet-1/$($l[1])"] = $l[2] }
+    elseif ($l[2] -eq "r6-pe2") { $r6Map["ethernet-1/$($l[3])"] = $l[0] }
 }
 $ts = [int64](([datetime]::UtcNow) - [datetime]'1970-01-01').TotalMilliseconds
-$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-r4"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "r4-p4 port map from LINKS"; data = @{ mapping = $r4Map }; timestamp = $ts } | ConvertTo-Json -Compress
+$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-r6"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "r6-pe2 port map from LINKS"; data = @{ mapping = $r6Map }; timestamp = $ts } | ConvertTo-Json -Compress
 Add-Content -Path $logPath -Value $logEntry -Encoding UTF8
 # #endregion
 

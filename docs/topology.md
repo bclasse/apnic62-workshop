@@ -63,7 +63,7 @@ Example: link between R2 and R6 — on R2: `10.2.6.2/27`, on R6: `10.2.6.6/27`
 | Router | ethernet-1/1 | ethernet-1/2 | ethernet-1/5 |
 |--------|--------------|--------------|--------------|
 | R5-PE1 | R1-P1 (core) | R9-CE1 (VLAN access) | R2-P2 (core) |
-| R6-PE2 | R1-P1 (core) | R10-CE2 | R2-P2 (core) |
+| R6-PE2 | R2-P2 (core) | R10-CE2 | R1-P1 (core) |
 
 ### R2-P2 (Figure 2)
 
