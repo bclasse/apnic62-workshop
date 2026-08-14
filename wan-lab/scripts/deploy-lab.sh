@@ -226,6 +226,39 @@ if [[ "${invalid_r3}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_r4=0
+if [[ -f "${LAB_CONFIG_DIR}/r4-p4.cfg" ]]; then
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.4.8.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.3.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+  if ! grep -q "interface ethernet-1/3 subinterface 0 ipv4 address 10.2.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+  if ! grep -q "interface ethernet-1/4 subinterface 0 ipv4 address 10.1.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.4.7.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
+    invalid_r4=1
+  fi
+fi
+
+# #region agent log
+debug_log "H9" "deploy-lab.sh:validate-r4" "r4-p4 SR guide interface mapping checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidR4P4\":${invalid_r4}}"
+# #endregion
+
+if [[ "${invalid_r4}" -ne 0 ]]; then
+  echo "ERROR: Invalid r4-p4 startup config (interface-to-peer mapping must match SR lab guide Figure 2)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
