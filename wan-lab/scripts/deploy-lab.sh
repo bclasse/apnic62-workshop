@@ -265,6 +265,30 @@ if [[ "${invalid_r4}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_r7=0
+if [[ -f "${LAB_CONFIG_DIR}/r7-pe3.cfg" ]]; then
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.3.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
+    invalid_r7=1
+  fi
+  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.4.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
+    invalid_r7=1
+  fi
+  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.4.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
+    invalid_r7=1
+  fi
+fi
+
+# #region agent log
+debug_log "H10" "deploy-lab.sh:validate-r7" "r7-pe3 SR guide interface mapping checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidR7Pe3\":${invalid_r7}}"
+# #endregion
+
+if [[ "${invalid_r7}" -ne 0 ]]; then
+  echo "ERROR: Invalid r7-pe3 startup config (R4 link must be on ethernet-1/5 per SR lab guide)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
