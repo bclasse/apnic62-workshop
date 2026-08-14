@@ -58,6 +58,32 @@ Example: link between R2 and R6 — on R2: `10.2.6.2/27`, on R6: `10.2.6.6/27`
 | ethernet-1/4 | R4-P4 | 10.1.4.0/27 |
 | ethernet-1/5 | R6-PE2 | 10.1.6.0/27 |
 
+### R5-PE1 and R6-PE2 (Figure 2)
+
+| Router | ethernet-1/1 | ethernet-1/2 | ethernet-1/5 |
+|--------|--------------|--------------|--------------|
+| R5-PE1 | R1-P1 (core) | R9-CE1 (VLAN access) | R2-P2 (core) |
+| R6-PE2 | R1-P1 (core) | R10-CE2 | R2-P2 (core) |
+
+### R2-P2 (Figure 2)
+
+| Interface | Peer |
+|-----------|------|
+| ethernet-1/1 | R1-P1 |
+| ethernet-1/2 | R3-P3 |
+| ethernet-1/3 | R4-P4 |
+| ethernet-1/4 | R5-PE1 |
+| ethernet-1/5 | R6-PE2 |
+
+### R3-P3 / R4-P4 / R7-PE3 / R8-PE4 (Figure 2)
+
+| Router | eth-1/1 | eth-1/2 | eth-1/3 | eth-1/4 | eth-1/6 | eth-1/7 |
+|--------|---------|---------|---------|---------|---------|---------|
+| R3-P3 | R1 | R2 | R4 | R8 | R7 | — |
+| R4-P4 | R1 | R2 | R3 | — | R7 | R8 |
+| R7-PE3 | R3 | R4 | R9 CE | R11 CE | — | — |
+| R8-PE4 | R3 | R4 | — | — | R12 CE | — |
+
 ## Underlay
 
 - **IGP:** IS-IS level-2 on all P and PE routers

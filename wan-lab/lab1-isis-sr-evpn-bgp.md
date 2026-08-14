@@ -197,7 +197,7 @@ ping 192.168.1.2 network-instance default -c 3
 ### Steps
 
 1. On R9-CE1, configure `ethernet-1/1.10` as routed with VLAN 10 and IP **192.168.1.1/24**.
-2. On R5-PE1, verify the preconfigured `ethernet-1/5.10` bridged subinterface toward CE (VLAN 10).
+2. On R5-PE1, verify the preconfigured `ethernet-1/2.10` bridged subinterface toward CE (VLAN 10).
 3. Verify interface operational state on both sides.
 
 > CE-to-CE connectivity is not expected until EVPN services are configured in Lab 4.

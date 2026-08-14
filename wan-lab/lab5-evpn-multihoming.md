@@ -103,8 +103,8 @@ Configure ESI-1 on **R5-PE1** and **R7-PE3**.
 
 ```bash
 enter candidate
-/interface ethernet-1/5 admin-state enable
-/interface ethernet-1/5 ethernet aggregate-id lag1
+/interface ethernet-1/2 admin-state enable
+/interface ethernet-1/2 ethernet aggregate-id lag1
 /interface lag1 admin-state enable
 /interface lag1 subinterface 10 type bridged
 /interface lag1 subinterface 10 admin-state enable
@@ -220,7 +220,7 @@ commit stay
 
 ### Steps
 
-1. On R5-PE1, administratively disable `ethernet-1/5` (or LAG member).
+1. On R5-PE1, administratively disable `ethernet-1/2` (or LAG member).
 2. On R6-PE2, verify ES destination resolution updates.
 3. Re-enable the interface and verify both PEs are valid next-hops again.
 

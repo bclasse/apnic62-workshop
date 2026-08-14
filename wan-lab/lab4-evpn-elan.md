@@ -109,7 +109,7 @@ info from state /network-instance default segment-routing mpls sid-database
 ```bash
 enter candidate
 /network-instance mac-vrf-10 type mac-vrf admin-state enable
-/network-instance mac-vrf-10 interface ethernet-1/5.10
+/network-instance mac-vrf-10 interface ethernet-1/2.10
 /network-instance mac-vrf-10 protocols bgp-evpn bgp-instance 1 admin-state enable
 /network-instance mac-vrf-10 protocols bgp-evpn bgp-instance 1 encapsulation-type mpls
 /network-instance mac-vrf-10 protocols bgp-evpn bgp-instance 1 evi 10
@@ -129,7 +129,7 @@ ping 192.168.1.2 network-instance mac-vrf-10 -c 3
 ### Steps
 
 1. Create MAC-VRF **mac-vrf-10** with EVI **10** on R5-PE1.
-2. Attach `ethernet-1/5.10` (preconfigured bridged subinterface toward R9-CE1).
+2. Attach `ethernet-1/2.10` (preconfigured bridged subinterface toward R9-CE1).
 3. Set transport to **sr-isis** (not LDP).
 4. Verify MAC-VRF is operationally up.
 5. Examine IMET routes (RT-3) from R6-PE2, R7-PE3, R8-PE4.

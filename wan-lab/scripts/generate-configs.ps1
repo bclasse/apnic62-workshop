@@ -22,13 +22,13 @@ $Nodes = @{
 $Links = @(
     @("r1-p1",1,"r5-pe1",1), @("r1-p1",2,"r2-p2",1), @("r1-p1",3,"r3-p3",1),
     @("r1-p1",4,"r4-p4",1), @("r1-p1",5,"r6-pe2",1),
-    @("r2-p2",2,"r3-p3",2), @("r2-p2",3,"r4-p4",2), @("r2-p2",4,"r5-pe1",2),
-    @("r2-p2",5,"r6-pe2",2),
+    @("r2-p2",2,"r3-p3",2), @("r2-p2",3,"r4-p4",2), @("r2-p2",4,"r5-pe1",5),
+    @("r2-p2",5,"r6-pe2",5),
     @("r3-p3",3,"r4-p4",3), @("r3-p3",4,"r8-pe4",1),
     @("r3-p3",6,"r7-pe3",1),
     @("r4-p4",6,"r7-pe3",2),
     @("r4-p4",7,"r8-pe4",2),
-    @("r5-pe1",5,"r9-ce1",1), @("r6-pe2",5,"r10-ce2",1), @("r7-pe3",3,"r9-ce1",2),
+    @("r5-pe1",2,"r9-ce1",1), @("r6-pe2",2,"r10-ce2",1), @("r7-pe3",3,"r9-ce1",2),
     @("r7-pe3",4,"r11-ce3",1),
     @("r8-pe4",6,"r12-ce4",1)
 )
@@ -81,14 +81,14 @@ function Test-UsesVlanAccess($node, $peer, $lab) {
 }
 
 function Add-PeCeVlanAccess($lines) {
-    Add-SetLeaf $lines "interface ethernet-1/5" "vlan-tagging" "true"
-    Add-SetPath $lines "interface ethernet-1/5 ethernet"
-    Add-SetLeaf $lines "interface ethernet-1/5 ethernet" "mac-address" "00:00:00:00:02:01"
-    Add-SetPath $lines "interface ethernet-1/5 subinterface 10"
-    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "type" "bridged"
-    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10" "admin-state" "enable"
-    Add-SetPath $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged"
-    Add-SetLeaf $lines "interface ethernet-1/5 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
+    Add-SetLeaf $lines "interface ethernet-1/2" "vlan-tagging" "true"
+    Add-SetPath $lines "interface ethernet-1/2 ethernet"
+    Add-SetLeaf $lines "interface ethernet-1/2 ethernet" "mac-address" "00:00:00:00:02:01"
+    Add-SetPath $lines "interface ethernet-1/2 subinterface 10"
+    Add-SetLeaf $lines "interface ethernet-1/2 subinterface 10" "type" "bridged"
+    Add-SetLeaf $lines "interface ethernet-1/2 subinterface 10" "admin-state" "enable"
+    Add-SetPath $lines "interface ethernet-1/2 subinterface 10 vlan encap single-tagged"
+    Add-SetLeaf $lines "interface ethernet-1/2 subinterface 10 vlan encap single-tagged" "vlan-id" "10"
 }
 
 function Build-Config($node, $lab) {
