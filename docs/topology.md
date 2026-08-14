@@ -82,7 +82,7 @@ Example: link between R2 and R6 — on R2: `10.2.6.2/27`, on R6: `10.2.6.6/27`
 | R3-P3 | R7 | R4 | R1 | R2 | R8 | — | — |
 | R4-P4 | R8 | R3 | R2 | R1 | R7 | — | — |
 | R7-PE3 | R3 | — | R9 CE | R11 CE | R4 | — | — |
-| R8-PE4 | R3 | R4 | — | — | R12 CE | — |
+| R8-PE4 | R4 | — | — | R3 | — | R12 CE | — |
 
 ## Underlay
 

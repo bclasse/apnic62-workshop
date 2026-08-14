@@ -289,6 +289,33 @@ if [[ "${invalid_r7}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_r8=0
+if [[ -f "${LAB_CONFIG_DIR}/r8-pe4.cfg" ]]; then
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.4.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
+    invalid_r8=1
+  fi
+  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.3.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
+    invalid_r8=1
+  fi
+  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.4.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
+    invalid_r8=1
+  fi
+  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.3.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
+    invalid_r8=1
+  fi
+fi
+
+# #region agent log
+debug_log "H11" "deploy-lab.sh:validate-r8" "r8-pe4 SR guide interface mapping checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidR8Pe4\":${invalid_r8}}"
+# #endregion
+
+if [[ "${invalid_r8}" -ne 0 ]]; then
+  echo "ERROR: Invalid r8-pe4 startup config (R4 on ethernet-1/1 and R3 on ethernet-1/5 per SR lab guide)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
