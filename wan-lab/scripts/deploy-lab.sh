@@ -316,6 +316,41 @@ if [[ "${invalid_r8}" -ne 0 ]]; then
   exit 1
 fi
 
+invalid_ce_ies=0
+declare -A ce_ies_expected=(
+  [r9-ce1]="172.16.1.10/24"
+  [r10-ce2]="172.16.2.10/24"
+  [r11-ce3]="172.16.3.10/24"
+  [r12-ce4]="172.16.4.10/24"
+)
+for ce in "${!ce_ies_expected[@]}"; do
+  cfg="${LAB_CONFIG_DIR}/${ce}.cfg"
+  if [[ ! -f "${cfg}" ]]; then
+    invalid_ce_ies=1
+    continue
+  fi
+  if ! grep -q "network-instance ies-1 type ip-vrf" "${cfg}" 2>/dev/null; then
+    invalid_ce_ies=1
+  fi
+  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address ${ce_ies_expected[$ce]}" "${cfg}" 2>/dev/null; then
+    invalid_ce_ies=1
+  fi
+  if ! grep -q "network-instance ies-1 interface ethernet-1/1.0" "${cfg}" 2>/dev/null; then
+    invalid_ce_ies=1
+  fi
+done
+
+# #region agent log
+debug_log "H12" "deploy-lab.sh:validate-ce-ies" "ce ies-1 startup config checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidCeIes\":${invalid_ce_ies}}"
+# #endregion
+
+if [[ "${invalid_ce_ies}" -ne 0 ]]; then
+  echo "ERROR: Invalid CE startup config (each CE must have network-instance ies-1 with 172.16.x.10/24 on ethernet-1/1 per SR lab guide Figure 2)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
 cd "${WAN_LAB_DIR}"
 
 # Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
