@@ -83,12 +83,21 @@ def mpls_sr_label_range_lines() -> list[str]:
     ]
 
 
-def include_mpls_sr_label_ranges(node: str, lab: str) -> bool:
+def include_sr_preconfig(node: str, lab: str) -> bool:
     if NODES[node]["role"] not in ("p", "pe"):
         return False
     if lab == "lab1-start" and node in ("r1-p1", "r5-pe1"):
         return False
     return True
+
+
+def isis_sr_preconfig_lines(router_num: int) -> list[str]:
+    return [
+        "set / network-instance default protocols isis dynamic-label-block srlb-dynamic-isis",
+        "set / network-instance default protocols isis instance il segment-routing mpls dynamic-adjacency-sids all-interfaces true",
+        f"set / network-instance default protocols isis instance il interface system0.0 segment-routing mpls ipv4-node-sid index {router_num}",
+        "set / network-instance default segment-routing mpls global-block label-range srgb-range-1",
+    ]
 
 
 def pe_ce_vlan_access_lines() -> list[str]:
@@ -127,12 +136,25 @@ def build_config(node: str, lab: str) -> str:
             f"set / network-instance default interface {ifname}.0",
         ])
     if info["role"] in ("p", "pe"):
+        sr = include_sr_preconfig(node, lab)
+        if sr:
+            lines.append("set / network-instance default protocols isis dynamic-label-block srlb-dynamic-isis")
         lines.extend([
             "set / network-instance default protocols isis instance il admin-state enable",
             f"set / network-instance default protocols isis instance il net [ {info['net']} ]",
+        ])
+        if sr:
+            lines.append(
+                "set / network-instance default protocols isis instance il segment-routing mpls dynamic-adjacency-sids all-interfaces true"
+            )
+        lines.extend([
             "set / network-instance default protocols isis instance il interface system0.0",
             "set / network-instance default protocols isis instance il interface system0.0 passive true",
         ])
+        if sr:
+            lines.append(
+                f"set / network-instance default protocols isis instance il interface system0.0 segment-routing mpls ipv4-node-sid index {n}"
+            )
         for peer in neighbors(node):
             if uses_vlan_access(node, peer, lab):
                 continue
@@ -144,8 +166,9 @@ def build_config(node: str, lab: str) -> str:
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2",
                 f"set / network-instance default protocols isis instance il interface {ifname}.0 level 2 metric 10",
             ])
-    if include_mpls_sr_label_ranges(node, lab):
-        lines.extend(mpls_sr_label_range_lines())
+        if sr:
+            lines.append("set / network-instance default segment-routing mpls global-block label-range srgb-range-1")
+            lines.extend(mpls_sr_label_range_lines())
     if lab == "lab1-start" and node == "r5-pe1":
         lines.extend(pe_ce_vlan_access_lines())
         lines.extend([

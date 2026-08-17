@@ -89,7 +89,7 @@ function Add-MplsSrLabelRanges($lines) {
     Add-SetLeaf $lines "system mpls label-ranges dynamic srlb-dynamic-isis" "end-label" "15999"
 }
 
-function Test-IncludeMplsSrLabelRanges($node, $lab) {
+function Test-IncludeSrPreconfig($node, $lab) {
     if ($Nodes[$node].role -notin @("p","pe")) { return $false }
     if ($lab -eq "lab1-start" -and $node -in @("r1-p1","r5-pe1")) { return $false }
     return $true
@@ -143,12 +143,22 @@ function Build-Config($node, $lab) {
     }
 
     if ($info.role -in @("p","pe")) {
+        $sr = Test-IncludeSrPreconfig $node $lab
         Add-SetPath $lines "network-instance default protocols isis"
+        if ($sr) {
+            $lines.Add("set / network-instance default protocols isis dynamic-label-block srlb-dynamic-isis") | Out-Null
+        }
         Add-SetPath $lines "network-instance default protocols isis instance il"
         Add-SetLeaf $lines "network-instance default protocols isis instance il" "admin-state" "enable"
         Add-SetLeaf $lines "network-instance default protocols isis instance il" "net" "[ $($info.net) ]"
+        if ($sr) {
+            $lines.Add("set / network-instance default protocols isis instance il segment-routing mpls dynamic-adjacency-sids all-interfaces true") | Out-Null
+        }
         Add-SetPath $lines "network-instance default protocols isis instance il interface system0.0"
         Add-SetLeaf $lines "network-instance default protocols isis instance il interface system0.0" "passive" "true"
+        if ($sr) {
+            $lines.Add("set / network-instance default protocols isis instance il interface system0.0 segment-routing mpls ipv4-node-sid index $n") | Out-Null
+        }
         foreach ($peer in (Get-Neighbors $node)) {
             if (Test-UsesVlanAccess $node $peer $lab) { continue }
             $port = Get-PortFor $node $peer
@@ -158,10 +168,10 @@ function Build-Config($node, $lab) {
             Add-SetPath $lines "network-instance default protocols isis instance il interface $if.0 level 2"
             Add-SetLeaf $lines "network-instance default protocols isis instance il interface $if.0 level 2" "metric" "10"
         }
-    }
-
-    if (Test-IncludeMplsSrLabelRanges $node $lab) {
-        Add-MplsSrLabelRanges $lines
+        if ($sr) {
+            $lines.Add("set / network-instance default segment-routing mpls global-block label-range srgb-range-1") | Out-Null
+            Add-MplsSrLabelRanges $lines
+        }
     }
 
     if ($lab -eq "lab1-start" -and $node -eq "r5-pe1") {
@@ -216,10 +226,10 @@ foreach ($l in $Links) {
 }
 $mplsNodes = @{}
 foreach ($lab in @("lab1-start","lab2-start")) {
-    $mplsNodes[$lab] = @($Nodes.Keys | Where-Object { Test-IncludeMplsSrLabelRanges $_ $lab })
+    $mplsNodes[$lab] = @($Nodes.Keys | Where-Object { Test-IncludeSrPreconfig $_ $lab })
 }
 $ts = [int64](([datetime]::UtcNow) - [datetime]'1970-01-01').TotalMilliseconds
-$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-mpls"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "mpls label-range preconfig nodes"; data = @{ nodes = $mplsNodes }; timestamp = $ts } | ConvertTo-Json -Compress
+$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-sr"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "sr preconfig nodes"; data = @{ nodes = $mplsNodes }; timestamp = $ts } | ConvertTo-Json -Compress
 Add-Content -Path $logPath -Value $logEntry -Encoding UTF8
 # #endregion
 
