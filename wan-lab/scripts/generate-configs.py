@@ -75,6 +75,51 @@ CE_IES_PE_PORT = {
     "r12-ce4": 1,
 }
 
+PE_CE_SERVICE = {
+    "r5-pe1": (2, 1),
+    "r6-pe2": (2, 2),
+    "r7-pe3": (4, 3),
+    "r8-pe4": (6, 4),
+}
+
+
+def pe_uses_service_port(node: str, peer: str) -> bool:
+    if node not in PE_CE_SERVICE:
+        return False
+    return port_for(node, peer) == PE_CE_SERVICE[node][0]
+
+
+def pe_ip_vrf_symm_lines(node: str) -> list[str]:
+    port, sn = PE_CE_SERVICE[node]
+    ifname = f"ethernet-1/{port}"
+    gw = f"172.16.{sn}.1"
+    evpn = [
+        "admin-state enable",
+        "encapsulation-type mpls",
+        "evi 100",
+        "mpls next-hop-resolution allowed-tunnel-types [sr-isis]",
+    ]
+    lines = [
+        f"set / interface {ifname} subinterface 0 type bridged",
+        f"set / interface {ifname} subinterface 0 admin-state enable",
+        "set / network-instance mac-vrf-symm type mac-vrf",
+        "set / network-instance mac-vrf-symm admin-state enable",
+        f"set / network-instance mac-vrf-symm interface {ifname}.0",
+        "set / network-instance mac-vrf-symm interface irb0.1",
+        "set / interface irb0 admin-state enable",
+        "set / interface irb0 subinterface 1 admin-state enable",
+        "set / interface irb0 subinterface 1 ipv4 admin-state enable",
+        f"set / interface irb0 subinterface 1 ipv4 address {gw}/24",
+        "set / network-instance ip-vrf-symm type ip-vrf",
+        "set / network-instance ip-vrf-symm admin-state enable",
+        "set / network-instance ip-vrf-symm interface irb0.1",
+    ]
+    for ni in ("mac-vrf-symm", "ip-vrf-symm"):
+        lines.append(f"set / network-instance {ni} protocols bgp-evpn bgp-instance 1 admin-state enable")
+        for leaf in evpn[1:]:
+            lines.append(f"set / network-instance {ni} protocols bgp-evpn bgp-instance 1 {leaf}")
+    return lines
+
 
 def ce_ies_subnet(node: str) -> int:
     return NODES[node]["num"] - 8
@@ -167,6 +212,8 @@ def build_config(node: str, lab: str) -> str:
         lines.append(f"set / interface {ifname} admin-state enable")
         if uses_vlan_access(node, peer, lab):
             continue
+        if pe_uses_service_port(node, peer):
+            continue
         if ce_uses_ies_port(node, peer):
             continue
         ip = link_ip(n, NODES[peer]["num"])
@@ -201,6 +248,8 @@ def build_config(node: str, lab: str) -> str:
         for peer in neighbors(node):
             if uses_vlan_access(node, peer, lab):
                 continue
+            if pe_uses_service_port(node, peer):
+                continue
             port = port_for(node, peer)
             ifname = f"ethernet-1/{port}"
             lines.extend([
@@ -212,21 +261,8 @@ def build_config(node: str, lab: str) -> str:
         if sr:
             lines.append("set / network-instance default segment-routing mpls global-block label-range srgb-range-1")
             lines.extend(mpls_sr_label_range_lines())
-    if lab == "lab1-start" and node == "r5-pe1":
-        lines.extend(pe_ce_vlan_access_lines())
-        lines.extend([
-            "set / network-instance ip-vrf-symm type ip-vrf",
-            "set / network-instance ip-vrf-symm admin-state enable",
-            "set / interface irb0 admin-state enable",
-            "set / interface irb0 subinterface 1 admin-state enable",
-            "set / interface irb0 subinterface 1 ipv4 admin-state enable",
-            "set / interface irb0 subinterface 1 ipv4 address 172.16.1.1/24",
-            "set / network-instance ip-vrf-symm interface irb0.1",
-            "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 admin-state enable",
-            "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 encapsulation-type mpls",
-            "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 evi 100",
-            "set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution allowed-tunnel-types [sr-isis]",
-        ])
+    if node in PE_CE_SERVICE:
+        lines.extend(pe_ip_vrf_symm_lines(node))
     if lab in ("lab4-start", "lab5-start") and node == "r5-pe1":
         lines.extend(pe_ce_vlan_access_lines())
     return "\n".join(lines) + "\n"

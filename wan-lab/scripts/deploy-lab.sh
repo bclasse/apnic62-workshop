@@ -101,7 +101,7 @@ if [[ -f "${LAB_CONFIG_DIR}/r5-pe1.cfg" ]]; then
     invalid_r5=1
   fi
   if grep -q "interface ethernet-1/2 vlan-tagging true" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null && \
-     grep -q "interface ethernet-1/2 subinterface 0" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
+     grep -q "interface ethernet-1/2 subinterface 0 ipv4 address" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
     invalid_r5=1
   fi
   if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.5.5/27" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
@@ -353,6 +353,44 @@ debug_log "H12" "deploy-lab.sh:validate-ce-ies" "ce ies-1 startup config checks"
 
 if [[ "${invalid_ce_ies}" -ne 0 ]]; then
   echo "ERROR: Invalid CE startup config (each CE must have network-instance ies-1 with 172.16.x.10/24 on ethernet-1/1 per SR lab guide Figure 2)."
+  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
+  exit 1
+fi
+
+invalid_pe_vrf=0
+declare -A pe_vrf_expected=(
+  [r5-pe1]="172.16.1.1/24"
+  [r6-pe2]="172.16.2.1/24"
+  [r7-pe3]="172.16.3.1/24"
+  [r8-pe4]="172.16.4.1/24"
+)
+for pe in "${!pe_vrf_expected[@]}"; do
+  cfg="${LAB_CONFIG_DIR}/${pe}.cfg"
+  if [[ ! -f "${cfg}" ]]; then
+    invalid_pe_vrf=1
+    continue
+  fi
+  if ! grep -q "network-instance mac-vrf-symm type mac-vrf" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
+  if ! grep -q "network-instance mac-vrf-symm interface irb0.1" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
+  if ! grep -q "network-instance ip-vrf-symm interface irb0.1" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
+  if ! grep -q "interface irb0 subinterface 1 ipv4 address ${pe_vrf_expected[$pe]}" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
+done
+
+# #region agent log
+debug_log "H13" "deploy-lab.sh:validate-pe-vrf" "pe ip-vrf-symm/mac-vrf-symm startup config checks" \
+  "{\"labNum\":${LAB_NUM},\"invalidPeVrf\":${invalid_pe_vrf}}"
+# #endregion
+
+if [[ "${invalid_pe_vrf}" -ne 0 ]]; then
+  echo "ERROR: Invalid PE startup config (each PE must have mac-vrf-symm + ip-vrf-symm with irb0.1 gateway per SR lab guide Figure 2)."
   echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
   exit 1
 fi
