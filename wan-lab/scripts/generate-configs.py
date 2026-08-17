@@ -99,8 +99,11 @@ def ce_ies_preconfig_lines(node: str) -> list[str]:
         f"set / interface {ifname} subinterface 0 ipv4 admin-state enable",
         f"set / interface {ifname} subinterface 0 ipv4 address {host}/24",
         f"set / network-instance ies-1 interface {ifname}.0",
-        "set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 admin-state enable",
-        f"set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 next-hop {gateway}",
+        "set / network-instance ies-1 next-hop-groups group gw admin-state enable",
+        "set / network-instance ies-1 next-hop-groups group gw nexthop 1 admin-state enable",
+        f"set / network-instance ies-1 next-hop-groups group gw nexthop 1 ip-address {gateway}",
+        "set / network-instance ies-1 static-routes route 0.0.0.0/0 admin-state enable",
+        "set / network-instance ies-1 static-routes route 0.0.0.0/0 next-hop-group gw",
     ]
 
 

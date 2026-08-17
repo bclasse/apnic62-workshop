@@ -103,9 +103,14 @@ function Add-CeIesPreconfig($lines, $node) {
     Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "admin-state" "enable"
     Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "address" "$ceIp/24"
     Add-SetLeaf $lines "network-instance ies-1" "interface" "$if.0"
-    Add-SetPath $lines "network-instance ies-1 protocols static-routes route 0.0.0.0/0"
-    Add-SetLeaf $lines "network-instance ies-1 protocols static-routes route 0.0.0.0/0" "admin-state" "enable"
-    $lines.Add("set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 next-hop $gateway") | Out-Null
+    Add-SetPath $lines "network-instance ies-1 next-hop-groups group gw"
+    Add-SetLeaf $lines "network-instance ies-1 next-hop-groups group gw" "admin-state" "enable"
+    Add-SetPath $lines "network-instance ies-1 next-hop-groups group gw nexthop 1"
+    Add-SetLeaf $lines "network-instance ies-1 next-hop-groups group gw nexthop 1" "admin-state" "enable"
+    Add-SetLeaf $lines "network-instance ies-1 next-hop-groups group gw nexthop 1" "ip-address" $gateway
+    Add-SetPath $lines "network-instance ies-1 static-routes route 0.0.0.0/0"
+    Add-SetLeaf $lines "network-instance ies-1 static-routes route 0.0.0.0/0" "admin-state" "enable"
+    Add-SetLeaf $lines "network-instance ies-1 static-routes route 0.0.0.0/0" "next-hop-group" "gw"
 }
 
 function Test-UsesVlanAccess($node, $peer, $lab) {

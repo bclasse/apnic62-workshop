@@ -338,6 +338,12 @@ for ce in "${!ce_ies_expected[@]}"; do
   if ! grep -q "network-instance ies-1 interface ethernet-1/1.0" "${cfg}" 2>/dev/null; then
     invalid_ce_ies=1
   fi
+  if grep -q "protocols static-routes" "${cfg}" 2>/dev/null; then
+    invalid_ce_ies=1
+  fi
+  if ! grep -q "network-instance ies-1 static-routes route 0.0.0.0/0 next-hop-group gw" "${cfg}" 2>/dev/null; then
+    invalid_ce_ies=1
+  fi
 done
 
 # #region agent log
