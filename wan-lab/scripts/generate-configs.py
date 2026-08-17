@@ -114,10 +114,9 @@ def pe_ip_vrf_symm_lines(node: str) -> list[str]:
         "set / network-instance ip-vrf-symm admin-state enable",
         "set / network-instance ip-vrf-symm interface irb0.1",
     ]
-    for ni in ("mac-vrf-symm", "ip-vrf-symm"):
-        lines.append(f"set / network-instance {ni} protocols bgp-evpn bgp-instance 1 admin-state enable")
-        for leaf in evpn[1:]:
-            lines.append(f"set / network-instance {ni} protocols bgp-evpn bgp-instance 1 {leaf}")
+    lines.append("set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 admin-state enable")
+    for leaf in evpn[1:]:
+        lines.append(f"set / network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 {leaf}")
     return lines
 
 
