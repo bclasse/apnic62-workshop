@@ -43,5 +43,5 @@ topology:
     - endpoints: ["r5-pe1:e1-2", "r9-ce1:e1-1"]
     - endpoints: ["r6-pe2:e1-2", "r10-ce2:e1-1"]
     - endpoints: ["r7-pe3:e1-7", "r9-ce1:e1-2"]
-    - endpoints: ["r7-pe3:e1-24", "r11-ce3:e1-1"]
+    - endpoints: ["r7-pe3:e1-2", "r11-ce3:e1-1"]
     - endpoints: ["r8-pe4:e1-2", "r12-ce4:e1-1"]
