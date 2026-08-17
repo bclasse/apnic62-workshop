@@ -68,6 +68,42 @@ def hostname(node: str) -> str:
     return f"{parts[0].upper()}-{parts[1].upper()}"
 
 
+CE_IES_PE_PORT = {
+    "r9-ce1": 1,
+    "r10-ce2": 1,
+    "r11-ce3": 1,
+    "r12-ce4": 1,
+}
+
+
+def ce_ies_subnet(node: str) -> int:
+    return NODES[node]["num"] - 8
+
+
+def ce_uses_ies_port(node: str, peer: str) -> bool:
+    if node not in CE_IES_PE_PORT:
+        return False
+    return port_for(node, peer) == CE_IES_PE_PORT[node]
+
+
+def ce_ies_preconfig_lines(node: str) -> list[str]:
+    port = CE_IES_PE_PORT[node]
+    sn = ce_ies_subnet(node)
+    ifname = f"ethernet-1/{port}"
+    host = f"172.16.{sn}.10"
+    gateway = f"172.16.{sn}.1"
+    return [
+        "set / network-instance ies-1 type ip-vrf",
+        "set / network-instance ies-1 admin-state enable",
+        f"set / interface {ifname} subinterface 0 admin-state enable",
+        f"set / interface {ifname} subinterface 0 ipv4 admin-state enable",
+        f"set / interface {ifname} subinterface 0 ipv4 address {host}/24",
+        f"set / network-instance ies-1 interface {ifname}.0",
+        "set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 admin-state enable",
+        f"set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 next-hop {gateway}",
+    ]
+
+
 def uses_vlan_access(node: str, peer: str, lab: str) -> bool:
     if node == "r5-pe1" and peer == "r9-ce1" and lab in ("lab1-start", "lab4-start", "lab5-start"):
         return True
@@ -128,6 +164,8 @@ def build_config(node: str, lab: str) -> str:
         lines.append(f"set / interface {ifname} admin-state enable")
         if uses_vlan_access(node, peer, lab):
             continue
+        if ce_uses_ies_port(node, peer):
+            continue
         ip = link_ip(n, NODES[peer]["num"])
         lines.extend([
             f"set / interface {ifname} subinterface 0 admin-state enable",
@@ -135,6 +173,8 @@ def build_config(node: str, lab: str) -> str:
             f"set / interface {ifname} subinterface 0 ipv4 address {ip}",
             f"set / network-instance default interface {ifname}.0",
         ])
+    if node in CE_IES_PE_PORT:
+        lines.extend(ce_ies_preconfig_lines(node))
     if info["role"] in ("p", "pe"):
         sr = include_sr_preconfig(node, lab)
         if sr:

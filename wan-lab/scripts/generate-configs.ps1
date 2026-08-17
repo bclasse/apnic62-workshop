@@ -72,6 +72,42 @@ function Get-Hostname($node) {
     return "$($p[0].ToUpper())-$($p[1].ToUpper())"
 }
 
+$CeIesPePort = @{
+    "r9-ce1"  = 1
+    "r10-ce2" = 1
+    "r11-ce3" = 1
+    "r12-ce4" = 1
+}
+
+function Get-CeIesSubnet($node) {
+    return $Nodes[$node].num - 8
+}
+
+function Test-CeUsesIesPort($node, $peer) {
+    if (-not $CeIesPePort.ContainsKey($node)) { return $false }
+    return (Get-PortFor $node $peer) -eq $CeIesPePort[$node]
+}
+
+function Add-CeIesPreconfig($lines, $node) {
+    $port = $CeIesPePort[$node]
+    $sn = Get-CeIesSubnet $node
+    $if = "ethernet-1/$port"
+    $ceIp = "172.16.$sn.10"
+    $gateway = "172.16.$sn.1"
+    Add-SetPath $lines "network-instance ies-1"
+    Add-SetLeaf $lines "network-instance ies-1" "type" "ip-vrf"
+    Add-SetLeaf $lines "network-instance ies-1" "admin-state" "enable"
+    Add-SetPath $lines "interface $if subinterface 0"
+    Add-SetLeaf $lines "interface $if subinterface 0" "admin-state" "enable"
+    Add-SetPath $lines "interface $if subinterface 0 ipv4"
+    Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "admin-state" "enable"
+    Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "address" "$ceIp/24"
+    Add-SetLeaf $lines "network-instance ies-1" "interface" "$if.0"
+    Add-SetPath $lines "network-instance ies-1 protocols static-routes route 0.0.0.0/0"
+    Add-SetLeaf $lines "network-instance ies-1 protocols static-routes route 0.0.0.0/0" "admin-state" "enable"
+    $lines.Add("set / network-instance ies-1 protocols static-routes route 0.0.0.0/0 next-hop $gateway") | Out-Null
+}
+
 function Test-UsesVlanAccess($node, $peer, $lab) {
     if ($node -eq "r5-pe1" -and $peer -eq "r9-ce1" -and $lab -in @("lab1-start","lab4-start","lab5-start")) { return $true }
     if ($node -eq "r9-ce1" -and $peer -eq "r5-pe1" -and $lab -eq "lab1-start") { return $true }
@@ -133,6 +169,7 @@ function Build-Config($node, $lab) {
         Add-SetPath $lines "interface $if"
         Add-SetLeaf $lines "interface $if" "admin-state" "enable"
         if (Test-UsesVlanAccess $node $peer $lab) { continue }
+        if (Test-CeUsesIesPort $node $peer) { continue }
         $ip = Get-LinkIp $n $Nodes[$peer].num
         Add-SetPath $lines "interface $if subinterface 0"
         Add-SetLeaf $lines "interface $if subinterface 0" "admin-state" "enable"
@@ -140,6 +177,10 @@ function Build-Config($node, $lab) {
         Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "admin-state" "enable"
         Add-SetLeaf $lines "interface $if subinterface 0 ipv4" "address" $ip
         Add-SetLeaf $lines "network-instance default" "interface" "$if.0"
+    }
+
+    if ($CeIesPePort.ContainsKey($node)) {
+        Add-CeIesPreconfig $lines $node
     }
 
     if ($info.role -in @("p","pe")) {
@@ -224,12 +265,13 @@ foreach ($l in $Links) {
     if ($l[0] -eq "r8-pe4") { $r8Map["ethernet-1/$($l[1])"] = $l[2] }
     elseif ($l[2] -eq "r8-pe4") { $r8Map["ethernet-1/$($l[3])"] = $l[0] }
 }
-$mplsNodes = @{}
-foreach ($lab in @("lab1-start","lab2-start")) {
-    $mplsNodes[$lab] = @($Nodes.Keys | Where-Object { Test-IncludeSrPreconfig $_ $lab })
+$ceIes = @{}
+foreach ($ce in $CeIesPePort.Keys) {
+    $sn = Get-CeIesSubnet $ce
+    $ceIes[$ce] = "172.16.$sn.10/24 on ethernet-1/$($CeIesPePort[$ce])"
 }
 $ts = [int64](([datetime]::UtcNow) - [datetime]'1970-01-01').TotalMilliseconds
-$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-sr"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "sr preconfig nodes"; data = @{ nodes = $mplsNodes }; timestamp = $ts } | ConvertTo-Json -Compress
+$logEntry = @{ sessionId = "984e35"; runId = "gen-configs-ce-ies"; hypothesisId = "H1"; location = "generate-configs.ps1"; message = "ce ies-1 preconfig"; data = @{ ceIes = $ceIes }; timestamp = $ts } | ConvertTo-Json -Compress
 Add-Content -Path $logPath -Value $logEntry -Encoding UTF8
 # #endregion
 
