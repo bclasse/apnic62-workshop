@@ -79,6 +79,52 @@ $CeIesPePort = @{
     "r12-ce4" = 1
 }
 
+$PeCeService = @{
+    "r5-pe1" = @{ port = 2; subnet = 1 }
+    "r6-pe2" = @{ port = 2; subnet = 2 }
+    "r7-pe3" = @{ port = 4; subnet = 3 }
+    "r8-pe4" = @{ port = 6; subnet = 4 }
+}
+
+function Test-PeUsesServicePort($node, $peer) {
+    if (-not $PeCeService.ContainsKey($node)) { return $false }
+    return (Get-PortFor $node $peer) -eq $PeCeService[$node].port
+}
+
+function Add-PeIpVrfSymm($lines, $node) {
+    $port = $PeCeService[$node].port
+    $sn = $PeCeService[$node].subnet
+    $if = "ethernet-1/$port"
+    $gw = "172.16.$sn.1"
+    Add-SetPath $lines "interface $if subinterface 0"
+    Add-SetLeaf $lines "interface $if subinterface 0" "type" "bridged"
+    Add-SetLeaf $lines "interface $if subinterface 0" "admin-state" "enable"
+    Add-SetPath $lines "network-instance mac-vrf-symm"
+    Add-SetLeaf $lines "network-instance mac-vrf-symm" "type" "mac-vrf"
+    Add-SetLeaf $lines "network-instance mac-vrf-symm" "admin-state" "enable"
+    Add-SetLeaf $lines "network-instance mac-vrf-symm" "interface" "$if.0"
+    Add-SetLeaf $lines "network-instance mac-vrf-symm" "interface" "irb0.1"
+    Add-SetPath $lines "interface irb0"
+    Add-SetLeaf $lines "interface irb0" "admin-state" "enable"
+    Add-SetPath $lines "interface irb0 subinterface 1"
+    Add-SetLeaf $lines "interface irb0 subinterface 1" "admin-state" "enable"
+    Add-SetPath $lines "interface irb0 subinterface 1 ipv4"
+    Add-SetLeaf $lines "interface irb0 subinterface 1 ipv4" "admin-state" "enable"
+    Add-SetLeaf $lines "interface irb0 subinterface 1 ipv4" "address" "$gw/24"
+    Add-SetPath $lines "network-instance ip-vrf-symm"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm" "type" "ip-vrf"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm" "admin-state" "enable"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm" "interface" "irb0.1"
+    foreach ($ni in @("mac-vrf-symm", "ip-vrf-symm")) {
+        Add-SetPath $lines "network-instance $ni protocols bgp-evpn bgp-instance 1"
+        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "admin-state" "enable"
+        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "encapsulation-type" "mpls"
+        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "evi" "100"
+        Add-SetPath $lines "network-instance $ni protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution"
+        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution" "allowed-tunnel-types" "[sr-isis]"
+    }
+}
+
 function Get-CeIesSubnet($node) {
     return $Nodes[$node].num - 8
 }
@@ -174,6 +220,7 @@ function Build-Config($node, $lab) {
         Add-SetPath $lines "interface $if"
         Add-SetLeaf $lines "interface $if" "admin-state" "enable"
         if (Test-UsesVlanAccess $node $peer $lab) { continue }
+        if (Test-PeUsesServicePort $node $peer) { continue }
         if (Test-CeUsesIesPort $node $peer) { continue }
         $ip = Get-LinkIp $n $Nodes[$peer].num
         Add-SetPath $lines "interface $if subinterface 0"
@@ -207,6 +254,7 @@ function Build-Config($node, $lab) {
         }
         foreach ($peer in (Get-Neighbors $node)) {
             if (Test-UsesVlanAccess $node $peer $lab) { continue }
+            if (Test-PeUsesServicePort $node $peer) { continue }
             $port = Get-PortFor $node $peer
             $if = "ethernet-1/$port"
             Add-SetPath $lines "network-instance default protocols isis instance il interface $if.0"
@@ -220,25 +268,8 @@ function Build-Config($node, $lab) {
         }
     }
 
-    if ($lab -eq "lab1-start" -and $node -eq "r5-pe1") {
-        Add-PeCeVlanAccess $lines
-        Add-SetPath $lines "network-instance ip-vrf-symm"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm" "type" "ip-vrf"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm" "admin-state" "enable"
-        Add-SetPath $lines "interface irb0"
-        Add-SetLeaf $lines "interface irb0" "admin-state" "enable"
-        Add-SetPath $lines "interface irb0 subinterface 1"
-        Add-SetLeaf $lines "interface irb0 subinterface 1" "admin-state" "enable"
-        Add-SetPath $lines "interface irb0 subinterface 1 ipv4"
-        Add-SetLeaf $lines "interface irb0 subinterface 1 ipv4" "admin-state" "enable"
-        Add-SetLeaf $lines "interface irb0 subinterface 1 ipv4" "address" "172.16.1.1/24"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm" "interface" "irb0.1"
-        Add-SetPath $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "admin-state" "enable"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "encapsulation-type" "mpls"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "evi" "100"
-        Add-SetPath $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution"
-        Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution" "allowed-tunnel-types" "[sr-isis]"
+    if ($PeCeService.ContainsKey($node)) {
+        Add-PeIpVrfSymm $lines $node
     }
 
     if ($lab -in @("lab4-start","lab5-start") -and $node -eq "r5-pe1") {
