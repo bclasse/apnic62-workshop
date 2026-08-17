@@ -115,14 +115,12 @@ function Add-PeIpVrfSymm($lines, $node) {
     Add-SetLeaf $lines "network-instance ip-vrf-symm" "type" "ip-vrf"
     Add-SetLeaf $lines "network-instance ip-vrf-symm" "admin-state" "enable"
     Add-SetLeaf $lines "network-instance ip-vrf-symm" "interface" "irb0.1"
-    foreach ($ni in @("mac-vrf-symm", "ip-vrf-symm")) {
-        Add-SetPath $lines "network-instance $ni protocols bgp-evpn bgp-instance 1"
-        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "admin-state" "enable"
-        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "encapsulation-type" "mpls"
-        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1" "evi" "100"
-        Add-SetPath $lines "network-instance $ni protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution"
-        Add-SetLeaf $lines "network-instance $ni protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution" "allowed-tunnel-types" "[sr-isis]"
-    }
+    Add-SetPath $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "admin-state" "enable"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "encapsulation-type" "mpls"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1" "evi" "100"
+    Add-SetPath $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution"
+    Add-SetLeaf $lines "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 mpls next-hop-resolution" "allowed-tunnel-types" "[sr-isis]"
 }
 
 function Get-CeIesSubnet($node) {

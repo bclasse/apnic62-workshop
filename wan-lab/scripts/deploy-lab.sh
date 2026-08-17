@@ -382,6 +382,12 @@ for pe in "${!pe_vrf_expected[@]}"; do
   if ! grep -q "interface irb0 subinterface 1 ipv4 address ${pe_vrf_expected[$pe]}" "${cfg}" 2>/dev/null; then
     invalid_pe_vrf=1
   fi
+  if grep -q "network-instance mac-vrf-symm protocols bgp-evpn" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
+  if ! grep -q "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 evi 100" "${cfg}" 2>/dev/null; then
+    invalid_pe_vrf=1
+  fi
 done
 
 # #region agent log
