@@ -34,10 +34,6 @@ Default credentials: `admin` / `NokiaSrl1!`
 - Nokia SR Linux **license file** (`ixr-x1b` requires a license — provided by workshop organizers)
 - SR Linux image: `ghcr.io/nokia/srlinux:25.10`
 
-## Transport policy
-
-This workshop uses **SR-ISIS** as the sole MPLS transport. **LDP is not used.**
-
 ## Documentation
 
 - [Topology and addressing](docs/topology.md)
