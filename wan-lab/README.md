@@ -119,7 +119,7 @@ ssh admin@r9-ce1
 
 4. Follow [Lab 1](lab1-isis-sr-evpn-bgp.md) and continue in order through Lab 5.
 
-> **💡 Tip:** Each lab has its own topology file (`apnic62-wan-lab<N>.clab.yml`) and config directory (`configs/lab<N>-start/`). Run `./scripts/deploy-lab.sh <N>` before starting that lab.
+> **💡 Tip:** All labs share a single topology file (`apnic62-wan-lab.clab.yml`); each lab just has its own config directory (`configs/lab<N>-start/`). Run `./scripts/deploy-lab.sh <N>` before starting that lab, or `./scripts/deploy-lab.sh <N> --reload` to push updated configs into an already-running lab without redeploying.
 
 ---
 
@@ -145,10 +145,11 @@ ssh admin@r9-ce1
 
 ```bash
 cd wan-lab
-./scripts/deploy-lab.sh <lab-number>
+./scripts/deploy-lab.sh <lab-number>            # full destroy + deploy
+./scripts/deploy-lab.sh <lab-number> --reload   # push updated configs without redeploying
 # or manually:
-clab destroy -t apnic62-wan-lab<N>.clab.yml --cleanup
-clab deploy -t apnic62-wan-lab<N>.clab.yml --reconfigure
+clab destroy -t apnic62-wan-lab.clab.yml --cleanup
+clab deploy -t apnic62-wan-lab.clab.yml --reconfigure
 ```
 
 ---
@@ -166,7 +167,7 @@ clab deploy -t apnic62-wan-lab<N>.clab.yml --reconfigure
 1. Check the **Troubleshooting** section in each lab guide
 2. Verify your license file and containerlab deployment (`clab inspect`)
 3. Run `./scripts/verify-lab.sh <N>` for a quick smoke check
-4. If deploy fails, run `./scripts/collect-deploy-diagnostics.sh <N>` and check `docker logs clab-apnic62-wan-lab<N>-r1-p1`
+4. If deploy fails, run `./scripts/collect-deploy-diagnostics.sh <N>` and check `docker logs clab-apnic62-wan-lab-r1-p1`
 4. Ask your lab instructor
 
 ---

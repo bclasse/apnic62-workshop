@@ -4,6 +4,10 @@ clab-*/
 
 # Runtime startup-config copies (deploy-lab.sh)
 wan-lab/configs/active/
+wan-lab/configs/active
+
+# Leftover debug log from earlier deploy-lab.sh instrumentation
+debug-*.log
 
 # Environment
 .env

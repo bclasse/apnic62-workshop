@@ -1,4 +1,4 @@
-﻿name: apnic62-wan-lab5
+name: apnic62-wan-lab
 
 topology:
   defaults:
@@ -9,7 +9,7 @@ topology:
       type: ixr-x1b
       image: ghcr.io/nokia/srlinux:25.10
       license: ../srl-license/srlinux.license
-      startup-config: configs/lab5-start/__clabNodeName__.cfg
+      startup-config: configs/active/__clabNodeName__.cfg
 
   nodes:
     r1-p1:

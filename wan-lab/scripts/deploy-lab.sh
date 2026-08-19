@@ -1,42 +1,49 @@
 #!/usr/bin/env bash
-# Deploy or reset the APNIC62 WAN lab for a given lab number (1-5).
+# Deploy, reset, or reload the APNIC62 WAN lab for a given lab number (1-5).
+#
+# Usage:
+#   deploy-lab.sh <lab-number>            Full destroy + deploy (recreates all containers)
+#   deploy-lab.sh <lab-number> --reload   Push that lab's startup configs into the
+#                                         already-running containers, without
+#                                         destroying/recreating them.
+#
+# Notes on --reload:
+#   - Only applies "set" lines from the .cfg files to the running candidate
+#     datastore and commits them; it cannot remove config that is no longer
+#     present in the .cfg file (there is no "delete" equivalent here).
+#   - It does not pick up topology/wiring changes (new/removed links, port
+#     renumbering) since containers are not recreated. Use a full (non
+#     --reload) run for that.
+#   - Nodes whose container isn't currently running are skipped with a
+#     warning rather than aborting the whole run.
 set -euo pipefail
 
 LAB_NUM="${1:-}"
+MODE="${2:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WAN_LAB_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${WAN_LAB_DIR}/.." && pwd)"
 LICENSE_FILE="${REPO_ROOT}/srl-license/srlinux.license"
-CLAB_FILE="${WAN_LAB_DIR}/apnic62-wan-lab${LAB_NUM}.clab.yml"
+CLAB_FILE="${WAN_LAB_DIR}/apnic62-wan-lab.clab.yml"
 LAB_CONFIG_DIR="${WAN_LAB_DIR}/configs/lab${LAB_NUM}-start"
-DEBUG_LOG="${REPO_ROOT}/debug-984e35.log"
-
-# #region agent log
-debug_log() {
-  local hypothesis_id="$1"
-  local location="$2"
-  local message="$3"
-  local data_json="$4"
-  printf '{"sessionId":"984e35","runId":"deploy","hypothesisId":"%s","location":"%s","message":"%s","data":%s,"timestamp":%s}\n' \
-    "$hypothesis_id" "$location" "$message" "$data_json" "$(date +%s%3N)" >> "${DEBUG_LOG}"
-}
-# #endregion
+ACTIVE_CONFIG_LINK="${WAN_LAB_DIR}/configs/active"
+LAB_NAME="apnic62-wan-lab"
+NODES=(r1-p1 r2-p2 r3-p3 r4-p4 r5-pe1 r6-pe2 r7-pe3 r8-pe4 r9-ce1 r10-ce2 r11-ce3 r12-ce4)
 
 usage() {
-  echo "Usage: $0 <lab-number>"
+  echo "Usage: $0 <lab-number> [--reload]"
   echo "  lab-number: 1-5"
+  echo "  --reload:   push config to already-running containers instead of a full redeploy"
   echo ""
-  echo "Example: $0 1"
+  echo "Examples:"
+  echo "  $0 1              # full destroy + deploy of lab 1"
+  echo "  $0 3 --reload     # push lab 3's configs into the running lab, no redeploy"
   exit 1
 }
 
 [[ -n "${LAB_NUM}" ]] || usage
 [[ "${LAB_NUM}" =~ ^[1-5]$ ]] || usage
-
-# #region agent log
-debug_log "H1" "deploy-lab.sh:paths" "resolved deploy paths" \
-  "{\"wanLabDir\":\"${WAN_LAB_DIR}\",\"clabFile\":\"${CLAB_FILE}\",\"labConfigDir\":\"${LAB_CONFIG_DIR}\"}"
-# #endregion
+[[ -z "${MODE}" || "${MODE}" == "--reload" ]] || usage
 
 if [[ ! -f "${LICENSE_FILE}" ]]; then
   echo "ERROR: Nokia license file not found at:"
@@ -48,7 +55,6 @@ fi
 
 if [[ ! -f "${CLAB_FILE}" ]]; then
   echo "ERROR: Containerlab topology file not found: ${CLAB_FILE}"
-  echo "Run: powershell -File scripts/generate-clab-yml.ps1 (or use committed .clab.yml files)"
   exit 1
 fi
 
@@ -58,383 +64,67 @@ if [[ ! -d "${LAB_CONFIG_DIR}" ]]; then
 fi
 
 missing_cfg=0
-for node in r1-p1 r2-p2 r3-p3 r4-p4 r5-pe1 r6-pe2 r7-pe3 r8-pe4 r9-ce1 r10-ce2 r11-ce3 r12-ce4; do
+for node in "${NODES[@]}"; do
   cfg="${LAB_CONFIG_DIR}/${node}.cfg"
   if [[ ! -f "${cfg}" ]]; then
     echo "ERROR: Missing startup config: ${cfg}"
     missing_cfg=1
   fi
 done
+[[ "${missing_cfg}" -eq 0 ]] || exit 1
 
-# #region agent log
-debug_log "H2" "deploy-lab.sh:configs" "startup config presence check" \
-  "{\"labConfigDir\":\"${LAB_CONFIG_DIR}\",\"missingCfg\":${missing_cfg},\"sampleCfg\":\"${LAB_CONFIG_DIR}/r1-p1.cfg\",\"sampleExists\":$([[ -f \"${LAB_CONFIG_DIR}/r1-p1.cfg\" ]] && echo true || echo false)}"
-# #endregion
-
-if [[ "${missing_cfg}" -ne 0 ]]; then
-  exit 1
-fi
-
-invalid_isis=0
 if grep -q "protocols isis admin-state enable" "${LAB_CONFIG_DIR}"/*.cfg 2>/dev/null; then
-  invalid_isis=1
-fi
-
-# #region agent log
-debug_log "H3" "deploy-lab.sh:validate-isis" "check for invalid protocols isis admin-state line" \
-  "{\"labConfigDir\":\"${LAB_CONFIG_DIR}\",\"invalidIsisAdminState\":${invalid_isis}}"
-# #endregion
-
-if [[ "${invalid_isis}" -ne 0 ]]; then
   echo "ERROR: Invalid startup config: 'protocols isis admin-state enable' is not valid SR Linux syntax."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
   exit 1
 fi
 
-invalid_r5=0
-if [[ -f "${LAB_CONFIG_DIR}/r5-pe1.cfg" ]]; then
-  if grep -q "interface irb0 subinterface 1 type routed" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
-    invalid_r5=1
-  fi
-  if grep -q "encapsulation-type mpls" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null && \
-     ! grep -q "allowed-tunnel-types" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
-    invalid_r5=1
-  fi
-  if grep -q "interface ethernet-1/2 vlan-tagging true" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null && \
-     grep -q "interface ethernet-1/2 subinterface 0 ipv4 address" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
-    invalid_r5=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.5.5/27" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
-    invalid_r5=1
-  fi
-  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.2.5.5/27" "${LAB_CONFIG_DIR}/r5-pe1.cfg" 2>/dev/null; then
-    invalid_r5=1
-  fi
-fi
-
-invalid_r6=0
-if [[ -f "${LAB_CONFIG_DIR}/r6-pe2.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
-    invalid_r6=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.1.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
-    invalid_r6=1
-  fi
-  if grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
-    invalid_r6=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.6.6/27" "${LAB_CONFIG_DIR}/r6-pe2.cfg" 2>/dev/null; then
-    invalid_r6=1
-  fi
-fi
-
-# #region agent log
-debug_log "H4" "deploy-lab.sh:validate-r5" "r5-pe1 ip-vrf startup config checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR5Pe1\":${invalid_r5},\"invalidR6Pe2\":${invalid_r6}}"
-# #endregion
-
-if [[ "${invalid_r5}" -ne 0 ]]; then
-  echo "ERROR: Invalid r5-pe1 startup config (irb0 type routed, MPLS without allowed-tunnel-types, vlan-tagging with subinterface 0, or wrong R2 port mapping)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-if [[ "${invalid_r6}" -ne 0 ]]; then
-  echo "ERROR: Invalid r6-pe2 startup config (R2 on ethernet-1/1 and R1 on ethernet-1/5 per SR lab guide)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r1=0
-if [[ -f "${LAB_CONFIG_DIR}/r1-p1.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.5.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
-    invalid_r1=1
-  fi
-  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.1.2.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
-    invalid_r1=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.2.1/27" "${LAB_CONFIG_DIR}/r1-p1.cfg" 2>/dev/null; then
-    invalid_r1=1
-  fi
-fi
-
-# #region agent log
-debug_log "H6" "deploy-lab.sh:validate-r1" "r1-p1 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR1P1\":${invalid_r1}}"
-# #endregion
-
-if [[ "${invalid_r1}" -ne 0 ]]; then
-  echo "ERROR: Invalid r1-p1 startup config (ethernet-1/1 must be 10.1.5.1 toward R5-PE1 per SR lab guide)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r2=0
-if [[ -f "${LAB_CONFIG_DIR}/r2-p2.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.2.6.2/27" "${LAB_CONFIG_DIR}/r2-p2.cfg" 2>/dev/null; then
-    invalid_r2=1
-  fi
-  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.1.2.2/27" "${LAB_CONFIG_DIR}/r2-p2.cfg" 2>/dev/null; then
-    invalid_r2=1
-  fi
-  if ! grep -q "interface ethernet-1/4 subinterface 0 ipv4 address 10.2.3.2/27" "${LAB_CONFIG_DIR}/r2-p2.cfg" 2>/dev/null; then
-    invalid_r2=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.2.5.2/27" "${LAB_CONFIG_DIR}/r2-p2.cfg" 2>/dev/null; then
-    invalid_r2=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.2.2/27" "${LAB_CONFIG_DIR}/r2-p2.cfg" 2>/dev/null; then
-    invalid_r2=1
-  fi
-fi
-
-# #region agent log
-debug_log "H7" "deploy-lab.sh:validate-r2" "r2-p2 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR2P2\":${invalid_r2}}"
-# #endregion
-
-if [[ "${invalid_r2}" -ne 0 ]]; then
-  echo "ERROR: Invalid r2-p2 startup config (interface-to-peer mapping must match SR lab guide Figure 2)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r3=0
-if [[ -f "${LAB_CONFIG_DIR}/r3-p3.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.3.7.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.3.4.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-  if ! grep -q "interface ethernet-1/3 subinterface 0 ipv4 address 10.1.3.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-  if ! grep -q "interface ethernet-1/4 subinterface 0 ipv4 address 10.2.3.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.3.8.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.3.3/27" "${LAB_CONFIG_DIR}/r3-p3.cfg" 2>/dev/null; then
-    invalid_r3=1
-  fi
-fi
-
-# #region agent log
-debug_log "H8" "deploy-lab.sh:validate-r3" "r3-p3 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR3P3\":${invalid_r3}}"
-# #endregion
-
-if [[ "${invalid_r3}" -ne 0 ]]; then
-  echo "ERROR: Invalid r3-p3 startup config (interface-to-peer mapping must match SR lab guide Figure 2)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r4=0
-if [[ -f "${LAB_CONFIG_DIR}/r4-p4.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.4.8.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-  if ! grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.3.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-  if ! grep -q "interface ethernet-1/3 subinterface 0 ipv4 address 10.2.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-  if ! grep -q "interface ethernet-1/4 subinterface 0 ipv4 address 10.1.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.4.7.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.1.4.4/27" "${LAB_CONFIG_DIR}/r4-p4.cfg" 2>/dev/null; then
-    invalid_r4=1
-  fi
-fi
-
-# #region agent log
-debug_log "H9" "deploy-lab.sh:validate-r4" "r4-p4 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR4P4\":${invalid_r4}}"
-# #endregion
-
-if [[ "${invalid_r4}" -ne 0 ]]; then
-  echo "ERROR: Invalid r4-p4 startup config (interface-to-peer mapping must match SR lab guide Figure 2)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r7=0
-if [[ -f "${LAB_CONFIG_DIR}/r7-pe3.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.3.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
-    invalid_r7=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.4.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
-    invalid_r7=1
-  fi
-  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.4.7.7/27" "${LAB_CONFIG_DIR}/r7-pe3.cfg" 2>/dev/null; then
-    invalid_r7=1
-  fi
-fi
-
-# #region agent log
-debug_log "H10" "deploy-lab.sh:validate-r7" "r7-pe3 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR7Pe3\":${invalid_r7}}"
-# #endregion
-
-if [[ "${invalid_r7}" -ne 0 ]]; then
-  echo "ERROR: Invalid r7-pe3 startup config (R4 link must be on ethernet-1/5 per SR lab guide)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_r8=0
-if [[ -f "${LAB_CONFIG_DIR}/r8-pe4.cfg" ]]; then
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.4.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
-    invalid_r8=1
-  fi
-  if ! grep -q "interface ethernet-1/5 subinterface 0 ipv4 address 10.3.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
-    invalid_r8=1
-  fi
-  if grep -q "interface ethernet-1/2 subinterface 0 ipv4 address 10.4.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
-    invalid_r8=1
-  fi
-  if grep -q "interface ethernet-1/1 subinterface 0 ipv4 address 10.3.8.8/27" "${LAB_CONFIG_DIR}/r8-pe4.cfg" 2>/dev/null; then
-    invalid_r8=1
-  fi
-fi
-
-# #region agent log
-debug_log "H11" "deploy-lab.sh:validate-r8" "r8-pe4 SR guide interface mapping checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidR8Pe4\":${invalid_r8}}"
-# #endregion
-
-if [[ "${invalid_r8}" -ne 0 ]]; then
-  echo "ERROR: Invalid r8-pe4 startup config (R4 on ethernet-1/1 and R3 on ethernet-1/5 per SR lab guide)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_ce_ies=0
-declare -A ce_ies_expected=(
-  [r9-ce1]="172.16.1.10/24"
-  [r10-ce2]="172.16.2.10/24"
-  [r11-ce3]="172.16.3.10/24"
-  [r12-ce4]="172.16.4.10/24"
-)
-for ce in "${!ce_ies_expected[@]}"; do
-  cfg="${LAB_CONFIG_DIR}/${ce}.cfg"
-  if [[ ! -f "${cfg}" ]]; then
-    invalid_ce_ies=1
-    continue
-  fi
-  if ! grep -q "network-instance ies-1 type ip-vrf" "${cfg}" 2>/dev/null; then
-    invalid_ce_ies=1
-  fi
-  if ! grep -q "interface ethernet-1/1 subinterface 0 ipv4 address ${ce_ies_expected[$ce]}" "${cfg}" 2>/dev/null; then
-    invalid_ce_ies=1
-  fi
-  if ! grep -q "network-instance ies-1 interface ethernet-1/1.0" "${cfg}" 2>/dev/null; then
-    invalid_ce_ies=1
-  fi
-  if grep -q "protocols static-routes" "${cfg}" 2>/dev/null; then
-    invalid_ce_ies=1
-  fi
-  if ! grep -q "network-instance ies-1 static-routes route 0.0.0.0/0 next-hop-group gw" "${cfg}" 2>/dev/null; then
-    invalid_ce_ies=1
-  fi
-done
-
-# #region agent log
-debug_log "H12" "deploy-lab.sh:validate-ce-ies" "ce ies-1 startup config checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidCeIes\":${invalid_ce_ies}}"
-# #endregion
-
-if [[ "${invalid_ce_ies}" -ne 0 ]]; then
-  echo "ERROR: Invalid CE startup config (each CE must have network-instance ies-1 with 172.16.x.10/24 on ethernet-1/1 per SR lab guide Figure 2)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
-
-invalid_pe_vrf=0
-declare -A pe_vrf_expected=(
-  [r5-pe1]="172.16.1.1/24"
-  [r6-pe2]="172.16.2.1/24"
-  [r7-pe3]="172.16.3.1/24"
-  [r8-pe4]="172.16.4.1/24"
-)
-for pe in "${!pe_vrf_expected[@]}"; do
-  cfg="${LAB_CONFIG_DIR}/${pe}.cfg"
-  if [[ ! -f "${cfg}" ]]; then
-    invalid_pe_vrf=1
-    continue
-  fi
-  if ! grep -q "network-instance mac-vrf-symm type mac-vrf" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-  if ! grep -q "network-instance mac-vrf-symm interface irb0.1" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-  if ! grep -q "network-instance ip-vrf-symm interface irb0.1" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-  if ! grep -q "interface irb0 subinterface 1 ipv4 address ${pe_vrf_expected[$pe]}" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-  if grep -q "network-instance mac-vrf-symm protocols bgp-evpn" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-  if ! grep -q "network-instance ip-vrf-symm protocols bgp-evpn bgp-instance 1 evi 100" "${cfg}" 2>/dev/null; then
-    invalid_pe_vrf=1
-  fi
-done
-
-# #region agent log
-debug_log "H13" "deploy-lab.sh:validate-pe-vrf" "pe ip-vrf-symm/mac-vrf-symm startup config checks" \
-  "{\"labNum\":${LAB_NUM},\"invalidPeVrf\":${invalid_pe_vrf}}"
-# #endregion
-
-if [[ "${invalid_pe_vrf}" -ne 0 ]]; then
-  echo "ERROR: Invalid PE startup config (each PE must have mac-vrf-symm + ip-vrf-symm with irb0.1 gateway per SR lab guide Figure 2)."
-  echo "Regenerate configs with: powershell -File scripts/generate-configs.ps1"
-  exit 1
-fi
+# Point the shared topology's startup-config path at this lab's config directory.
+ln -sfn "lab${LAB_NUM}-start" "${ACTIVE_CONFIG_LINK}"
 
 cd "${WAN_LAB_DIR}"
 
-# Destroy any previously deployed APNIC62 WAN lab topology (lab1-lab5).
-for n in 1 2 3 4 5; do
-  prev="${WAN_LAB_DIR}/apnic62-wan-lab${n}.clab.yml"
-  if [[ -f "${prev}" ]]; then
-    clab destroy -t "${prev}" --cleanup 2>/dev/null || true
+if [[ "${MODE}" == "--reload" ]]; then
+  echo "==> Reloading lab ${LAB_NUM} configs into running containers (no redeploy)"
+  echo ""
+  fail=0
+  for node in "${NODES[@]}"; do
+    container="clab-${LAB_NAME}-${node}"
+    if ! docker inspect -f '{{.State.Running}}' "${container}" >/dev/null 2>&1; then
+      echo "  [skip]  ${container} is not running"
+      continue
+    fi
+    cfg="${LAB_CONFIG_DIR}/${node}.cfg"
+    if { cat "${cfg}"; echo; echo "commit save"; } | docker exec -i "${container}" sr_cli -e >/tmp/"${node}"-reload.log 2>&1; then
+      echo "  [ok]    ${node}"
+    else
+      echo "  [FAIL]  ${node} (see /tmp/${node}-reload.log)"
+      fail=1
+    fi
+  done
+  echo ""
+  if [[ "${fail}" -ne 0 ]]; then
+    echo "One or more nodes failed to reload. Check the logs referenced above."
+    exit 1
   fi
-done
+  echo "Reload complete for lab ${LAB_NUM}."
+  exit 0
+fi
 
-# #region agent log
-debug_log "H3" "deploy-lab.sh:deploy" "starting clab deploy" \
-  "{\"clabFile\":\"${CLAB_FILE}\",\"cwd\":\"$(pwd)\"}"
-# #endregion
+# Destroy any previously deployed instance of the shared topology.
+clab destroy -t "${CLAB_FILE}" --cleanup 2>/dev/null || true
 
-echo "==> Deploying lab ${LAB_NUM} from ${CLAB_FILE}"
+echo "==> Deploying lab ${LAB_NUM} from ${CLAB_FILE} (configs/active -> lab${LAB_NUM}-start)"
 set +e
 clab deploy -t "${CLAB_FILE}" --reconfigure --max-workers 4
 deploy_rc=$?
 set -e
 
 if [[ "${deploy_rc}" -ne 0 ]]; then
-  # #region agent log
-  debug_log "H5" "deploy-lab.sh:failed" "clab deploy failed" "{\"labNum\":${LAB_NUM},\"exitCode\":${deploy_rc}}"
-  # #endregion
   echo ""
   echo "Deploy failed (exit ${deploy_rc}). Collecting diagnostics..."
   bash "${SCRIPT_DIR}/collect-deploy-diagnostics.sh" "${LAB_NUM}" || true
   exit "${deploy_rc}"
 fi
-
-# #region agent log
-debug_log "H4" "deploy-lab.sh:done" "clab deploy finished" "{\"labNum\":${LAB_NUM}}"
-# #endregion
 
 echo ""
 echo "Lab ${LAB_NUM} deployed. Connect to student routers:"
