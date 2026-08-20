@@ -23,7 +23,7 @@ Default credentials: `admin` / `NokiaSrl1!`
 | [Lab 2](wan-lab/lab2-te-link-attributes.md) | TE Link Attributes | ~45 min |
 | [Lab 3](wan-lab/lab3-sr-te-policies.md) | Uncolored SR-MPLS TE Policies | ~180 min |
 | [Lab 4](wan-lab/lab4-evpn-elan.md) | EVPN ELAN | ~90 min |
-| [Lab 5](wan-lab/lab5-evpn-multihoming.md) | EVPN Multi-homing ELAN | ~150 min |
+| [Lab 5](wan-lab/lab5-evpn-multihoming.md) | EVPN Multi-homing ELAN | ~120 min |
 
 **Start here:** [wan-lab/README.md](wan-lab/README.md)
 
