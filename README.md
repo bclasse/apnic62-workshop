@@ -20,7 +20,7 @@ Default credentials: `admin` / `NokiaSrl1!`
 | Lab | Topic | Duration |
 |-----|-------|----------|
 | [Lab 1](wan-lab/lab1-isis-sr-evpn-bgp.md) | IS-IS Segment Routing + MP-BGP for EVPN | ~120 min |
-| [Lab 2](wan-lab/lab2-te-link-attributes.md) | TE Link Attributes | ~45 min |
+| [Lab 2](wan-lab/lab2-te-link-attributes.md) | TE Link Attributes | ~30 min |
 | [Lab 3](wan-lab/lab3-sr-te-policies.md) | Uncolored SR-MPLS TE Policies | ~180 min |
 | [Lab 4](wan-lab/lab4-evpn-elan.md) | EVPN ELAN | ~90 min |
 | [Lab 5](wan-lab/lab5-evpn-multihoming.md) | EVPN Multi-homing ELAN | ~120 min |
