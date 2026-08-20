@@ -128,8 +128,8 @@ fi
 
 echo ""
 echo "Lab ${LAB_NUM} deployed. Connect to student routers:"
-echo "  ssh admin@r1-p1"
-echo "  ssh admin@r5-pe1"
-echo "  ssh admin@r9-ce1"
+echo "  ssh admin@clab-apnic62-wan-lab-r1-p1"
+echo "  ssh admin@clab-apnic62-wan-lab-r5-pe1"
+echo "  ssh admin@clab-apnic62-wan-lab-r9-ce1"
 echo ""
 echo "Default password: NokiaSrl1!"

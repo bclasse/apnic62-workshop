@@ -10,7 +10,7 @@ cd apnic62-workshop
 # Place your Nokia license at srl-license/srlinux.license (provided by organizers)
 cd wan-lab
 ./scripts/deploy-lab.sh 1
-ssh admin@r5-pe1
+ssh admin@clab-apnic62-wan-lab-r5-pe1
 ```
 
 Default credentials: `admin` / `NokiaSrl1!`

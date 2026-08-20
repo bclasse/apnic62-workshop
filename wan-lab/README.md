@@ -112,9 +112,9 @@ chmod +x scripts/*.sh
 3. Connect to student routers:
 
 ```bash
-ssh admin@r1-p1    # password: NokiaSrl1!
-ssh admin@r5-pe1
-ssh admin@r9-ce1
+ssh admin@clab-apnic62-wan-lab-r1-p1    # password: NokiaSrl1!
+ssh admin@clab-apnic62-wan-lab-r5-pe1
+ssh admin@clab-apnic62-wan-lab-r9-ce1
 ```
 
 4. Follow [Lab 1](lab1-isis-sr-evpn-bgp.md) and continue in order through Lab 5.
