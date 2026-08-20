@@ -1,4 +1,4 @@
-# APNIC62 Nokia SR Linux WAN Workshop
+# APNIC62 - Next-Gen Service Provider Routing Workshop
 
 Hands-on workshop covering **Segment Routing**, **SR-MPLS traffic engineering**, and **EVPN-MPLS** on Nokia SR Linux — delivered at APNIC62.
 
