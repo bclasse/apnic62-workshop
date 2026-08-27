@@ -21,8 +21,8 @@ Run `./scripts/deploy-lab.sh <N>` to load lab **N**'s start configuration before
 
 ## Lab guides
 
-| Lab | Title | Exercises | Duration |
-|-----|-------|-----------|----------|
+| Lab | Title | Duration |
+|-----|-------|----------|
 | [Lab 1](wan-lab/lab1-isis-sr-evpn-bgp.md) | Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN | ~120 min |
 | [Lab 2](wan-lab/lab2-te-link-attributes.md) | Configuration and advertisement of traffic engineering link attributes | ~45 min |
 | [Lab 3](wan-lab/lab3-sr-te-policies.md) | Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy) | ~180 min |
