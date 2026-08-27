@@ -161,15 +161,9 @@ The guide presents these routers through two views.
 
 **Segment routing lab environment** (Labs 1, 2 and 3) — 12 × 7250 IXR routers: four CE, four PE, four P.
 
-```
-     R1-P1 ─── R5-PE1 ─── R9-CE1
-       │    ╲    │    ╱
-     R2-P2 ─── R6-PE2 ─── R10-CE2
-       │    ╲    │    ╱
-     R3-P3 ─── R7-PE3 ─── (MH to R9)
-       │         │
-     R4-P4 ─── R8-PE4
-```
+![Segment routing lab topology](../docs/images/topology-sr.png)
+
+*Figure 1 — Segment routing lab topology, from the workshop lab guide.*
 
 **EVPN lab environment** (Labs 4 and 5) — six of the same routers. PE1–PE4 are R5–R8 and keep their segment routing `system0.0` addresses:
 
