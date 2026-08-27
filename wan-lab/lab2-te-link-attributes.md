@@ -1,8 +1,6 @@
-# 📡 Lab 2: TE Link Attributes
+# 📡 Lab 2 — Configuration and advertisement of traffic engineering link attributes
 
 > **Traffic engineering link attributes and IS-IS TE advertisement**
-
-Configure admin groups, SRLGs, and TE interface membership, then enable IS-IS to advertise TE information.
 
 **Estimated time:** ~45 minutes
 
@@ -10,36 +8,39 @@ Configure admin groups, SRLGs, and TE interface membership, then enable IS-IS to
 
 ## 📋 Table of Contents
 
-1. [Overview](#overview)
+1. [Objective](#objective)
 2. [Prerequisites](#prerequisites)
-3. [Exercise 2.1 — Configure TE link attributes](#exercise-21--configure-te-link-attributes)
-4. [Exercise 2.2 — Add interfaces to TE contexts](#exercise-22--add-interfaces-to-te-contexts)
-5. [Exercise 2.3 — Enable IS-IS TE advertisement](#exercise-23--enable-isis-te-advertisement)
+3. [Exercise 2.1 — Configure traffic engineering link attributes](#exercise-21--configure-traffic-engineering-link-attributes)
+4. [Exercise 2.2 — Add interfaces to the traffic engineering contexts](#exercise-22--add-interfaces-to-the-traffic-engineering-contexts)
+5. [Exercise 2.3 — Enable IS-IS to advertise traffic engineering information](#exercise-23--enable-is-is-to-advertise-traffic-engineering-information)
 6. [Troubleshooting](#troubleshooting)
 7. [What's Next?](#whats-next)
 
 ---
 
-## Overview
+## Objective
 
-Deploy Lab 2 before starting:
+The student will configure traffic engineering link attributes, such as admin groups and shared-risk link groups (SRLGs), associate the attributes with the different interfaces, and configure the routing protocol to advertise the additional link information.
 
-```bash
-./scripts/deploy-lab.sh 2
-```
-
-**Student routers:** R1-P1, R5-PE1, R9-CE1
+**Student routers:** R1-P1, R5-PE1, R9-CE1 (all others preconfigured)
 
 ---
 
 ## Prerequisites
 
-- Lab 1 completed (SR-ISIS operational on P/PE routers)
-- Lab 2 startup configuration loaded
+Load the start configuration of this lab via the deployment script before proceeding:
+
+```bash
+./scripts/deploy-lab.sh 2
+```
+
+- Lab 1 completed (SR-ISIS operational on the P/PE routers)
 
 ---
 
-## Exercise 2.1 — Configure TE link attributes
+## Exercise 2.1 — Configure traffic engineering link attributes
+
+Create link attributes, such as admin groups and shared-risk link groups, that will later be associated with TE interfaces.
 
 ### Configuration commands
 
@@ -66,7 +67,7 @@ info from state /network-instance default traffic-engineering
 
 ---
 
-## Exercise 2.2 — Add interfaces to TE contexts
+## Exercise 2.2 — Add interfaces to the traffic engineering contexts
 
 ### Configuration commands
 
@@ -92,7 +93,7 @@ info /network-instance default traffic-engineering interface *
 
 ---
 
-## Exercise 2.3 — Enable IS-IS TE advertisement
+## Exercise 2.3 — Enable IS-IS to advertise traffic engineering information
 
 ### Configuration commands
 
@@ -128,6 +129,6 @@ info from state /network-instance default protocols isis instance il level 2 lin
 
 ## What's Next?
 
-Continue to **[Lab 3: Uncolored SR-MPLS TE Policies](lab3-sr-te-policies.md)**.
+Continue to **[Lab 3 — Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy)](lab3-sr-te-policies.md)**.
 
 **[Back to lab index](README.md)**

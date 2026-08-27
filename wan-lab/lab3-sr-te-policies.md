@@ -1,8 +1,6 @@
-# 🛤️ Lab 3: Uncolored SR-MPLS TE Policies
+# 🛤️ Lab 3 — Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy)
 
 > **Segment routing tunnels with traffic engineering constraints**
-
-Create SR-MPLS TE policies with IGP/TE metrics, explicit paths, excluded hops, seamless BFD, SRLG-diverse secondary paths, and switch IP-VRF transport to TE policies.
 
 **Estimated time:** ~180 minutes
 
@@ -10,33 +8,42 @@ Create SR-MPLS TE policies with IGP/TE metrics, explicit paths, excluded hops, s
 
 ## 📋 Table of Contents
 
-1. [Overview](#overview)
-2. [Exercise 3.1 — TE policy using IGP metrics](#exercise-31--te-policy-using-igp-metrics)
-3. [Exercise 3.2 — BSID label range](#exercise-32--bsid-label-range)
-4. [Exercise 3.3 — Explicit paths](#exercise-33--explicit-paths)
-5. [Exercise 3.4 — TE metrics](#exercise-34--te-metrics)
-6. [Exercise 3.5 — Label stack reduction](#exercise-35--label-stack-reduction)
-7. [Exercise 3.6 — Excluded hops](#exercise-36--excluded-hops)
-8. [Exercise 3.7 — Seamless BFD](#exercise-37--seamless-bfd)
-9. [Exercise 3.8 — Secondary path with SRLG diversity](#exercise-38--secondary-path-with-srlg-diversity)
-10. [Exercise 3.9 — IP-VRF over TE policy transport](#exercise-39--ip-vrf-over-te-policy-transport)
-11. [What's Next?](#whats-next)
+1. [Objective](#objective)
+2. [Prerequisites](#prerequisites)
+3. [Exercise 3.1 — Configure an uncolored SR-MPLS TE policy that uses IGP metrics](#exercise-31--configure-an-uncolored-sr-mpls-te-policy-that-uses-igp-metrics)
+4. [Exercise 3.2 — Configure a dedicated MPLS label range for the binding SID (BSID)](#exercise-32--configure-a-dedicated-mpls-label-range-for-the-binding-sid-bsid)
+5. [Exercise 3.3 — Configure an uncolored SR-MPLS TE policy that uses explicit paths](#exercise-33--configure-an-uncolored-sr-mpls-te-policy-that-uses-explicit-paths)
+6. [Exercise 3.4 — Modify the TE policy to use TE metrics](#exercise-34--modify-the-te-policy-to-use-te-metrics)
+7. [Exercise 3.5 — Verify label stack reduction for a TE policy](#exercise-35--verify-label-stack-reduction-for-a-te-policy)
+8. [Exercise 3.6 — Configure a TE policy with excluded hops](#exercise-36--configure-a-te-policy-with-excluded-hops)
+9. [Exercise 3.7 — Configure a TE policy with seamless BFD](#exercise-37--configure-a-te-policy-with-seamless-bfd)
+10. [Exercise 3.8 — Configure a TE policy with a secondary path for redundancy, ensuring path diversity through SRLGs](#exercise-38--configure-a-te-policy-with-a-secondary-path-for-redundancy-ensuring-path-diversity-through-srlgs)
+11. [Exercise 3.9 — Modify the IP-VRF to use TE policy transport tunnels](#exercise-39--modify-the-ip-vrf-to-use-te-policy-transport-tunnels)
+12. [What's Next?](#whats-next)
 
 ---
 
-## Overview
+## Objective
 
-Deploy Lab 3 before starting:
+Students will create segment routing tunnels, also known as label switched paths, that satisfy traffic engineering constraints. Students will then modify the existing IP-VRF to have it use SR-TE transport tunnels.
+
+In SR Linux, SR-TE LSPs are referred to as *uncolored SR-MPLS TE-policy segment lists*. A TE policy allows a set of paths to be grouped into a coherent policy supporting resiliency scenarios (a primary path with secondary and/or standby paths), including BFD for rapid failure detection and switchover. Path constraints are managed per path.
+
+**Student routers:** R1-P1, R5-PE1, R9-CE1 (all others preconfigured)
+
+---
+
+## Prerequisites
+
+Load the start configuration of this lab via the deployment script before proceeding:
 
 ```bash
 ./scripts/deploy-lab.sh 3
 ```
 
-**Student routers:** R1-P1, R5-PE1, R9-CE1
-
 ---
 
-## Exercise 3.1 — TE policy using IGP metrics
+## Exercise 3.1 — Configure an uncolored SR-MPLS TE policy that uses IGP metrics
 
 ### Configuration commands
 
@@ -62,7 +69,7 @@ info from state /network-instance default traffic-engineering-policies policy-da
 
 ---
 
-## Exercise 3.2 — BSID label range
+## Exercise 3.2 — Configure a dedicated MPLS label range for the binding SID (BSID)
 
 ### Configuration commands
 
@@ -81,7 +88,7 @@ commit stay
 
 ---
 
-## Exercise 3.3 — Explicit paths
+## Exercise 3.3 — Configure an uncolored SR-MPLS TE policy that uses explicit paths
 
 ### Configuration commands
 
@@ -99,7 +106,7 @@ commit stay
 
 ---
 
-## Exercise 3.4 — TE metrics
+## Exercise 3.4 — Modify the TE policy to use TE metrics
 
 ### Steps
 
@@ -109,7 +116,7 @@ commit stay
 
 ---
 
-## Exercise 3.5 — Label stack reduction
+## Exercise 3.5 — Verify label stack reduction for a TE policy
 
 ### Steps
 
@@ -122,7 +129,7 @@ show network-instance default tunnel-table ipv4 <prefix> type te-policy-sr-mpls-
 
 ---
 
-## Exercise 3.6 — Excluded hops
+## Exercise 3.6 — Configure a TE policy with excluded hops
 
 ### Configuration commands
 
@@ -139,7 +146,7 @@ commit stay
 
 ---
 
-## Exercise 3.7 — Seamless BFD
+## Exercise 3.7 — Configure a TE policy with seamless BFD
 
 ### Configuration commands
 
@@ -156,7 +163,7 @@ commit stay
 
 ---
 
-## Exercise 3.8 — Secondary path with SRLG diversity
+## Exercise 3.8 — Configure a TE policy with a secondary path for redundancy, ensuring path diversity through SRLGs
 
 ### Configuration commands
 
@@ -175,7 +182,7 @@ commit stay
 
 ---
 
-## Exercise 3.9 — IP-VRF over TE policy transport
+## Exercise 3.9 — Modify the IP-VRF to use TE policy transport tunnels
 
 ### Configuration commands
 
@@ -202,6 +209,6 @@ ping network-instance ip-vrf-symm <remote-ip> -I 172.16.1.1
 
 ## What's Next?
 
-Continue to **[Lab 4: EVPN ELAN](lab4-evpn-elan.md)** — deploy Layer 2 EVPN services using SR-ISIS transport.
+Continue to **[Lab 4 — Configuration of EVPN ELAN](lab4-evpn-elan.md)** — deploy Layer 2 EVPN services using SR-ISIS transport.
 
 **[Back to lab index](README.md)**

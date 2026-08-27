@@ -16,13 +16,15 @@ startup-config: configs/active/__clabNodeName__.cfg
 
 Config files use hierarchical SR Linux CLI `set` commands (same style as [srl-telemetry-lab](https://github.com/srl-labs/srl-telemetry-lab)).
 
-| Lab | Config directory |
-|-----|-------------------|
-| 1 | `configs/lab1-start/` |
-| 2 | `configs/lab2-start/` |
-| 3 | `configs/lab3-start/` |
-| 4 | `configs/lab4-start/` |
-| 5 | `configs/lab5-start/` |
+| Lab | Lab guide title | Config directory |
+|-----|-----------------|------------------|
+| 1 | Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN | `configs/lab1-start/` |
+| 2 | Configuration and advertisement of traffic engineering link attributes | `configs/lab2-start/` |
+| 3 | Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy) | `configs/lab3-start/` |
+| 4 | Configuration of EVPN ELAN | `configs/lab4-start/` |
+| 5 | Configuration of EVPN multi-homing in ELAN | `configs/lab5-start/` |
+
+Each lab guide opens with the instruction to *load the start configuration of this lab via the deployment script before proceeding*; `deploy-lab.sh <N>` is that script.
 
 ## Deploying and reloading
 
