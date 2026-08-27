@@ -1,13 +1,13 @@
-# Router naming — EVPN guide to SR topology
+# Router naming — lab guide to containerlab nodes
 
-The Nokia EVPN for WAN lab guide uses a simplified 6-router topology with different PE numbering. This workshop uses the **12-router Segment Routing WAN topology** exclusively.
+The workshop lab guide presents one set of routers through two views: the **segment routing lab environment** (12 routers, Labs 1–3) and the **EVPN lab environment** (six of the same routers, Labs 4–5). PE1–PE4 in the EVPN view are the segment routing view's R5–R8 and keep their `system0.0` addresses, so the guide's loopbacks and this topology's loopbacks are identical.
 
-Always use the SR topology names and loopbacks below when working through Labs 4 and 5.
+Use the containerlab node names below when connecting to routers.
 
 ## PE router mapping
 
-| EVPN lab guide | Workshop router | Role | system0.0 |
-|----------------|-----------------|------|-----------|
+| Lab guide (EVPN view) | Workshop router | Role | system0.0 |
+|-----------------------|-----------------|------|-----------|
 | PE1 (student PE) | **R5-PE1** | Provider edge | 10.10.10.5/32 |
 | PE2 | **R6-PE2** | Provider edge | 10.10.10.6/32 |
 | PE3 | **R7-PE3** | Provider edge | 10.10.10.7/32 |
@@ -15,20 +15,20 @@ Always use the SR topology names and loopbacks below when working through Labs 4
 
 ## CE router mapping
 
-| EVPN lab guide | Workshop router | Role |
-|----------------|-----------------|------|
-| CE1 / CE5 | **R9-CE1** | Customer edge |
-| CE2 / CE6 | **R10-CE2** | Customer edge |
+| Lab guide (EVPN view) | Workshop router | Role |
+|-----------------------|-----------------|------|
+| CE1 | **R9-CE1** | Customer edge |
+| CE2 | **R10-CE2** | Customer edge |
 
 ## Multi-homing (Lab 5)
 
-| EVPN lab guide | Workshop router |
-|----------------|-----------------|
+| Lab guide (EVPN view) | Workshop router |
+|-----------------------|-----------------|
 | PE1 (ES peer) | **R5-PE1** (10.10.10.5) |
 | PE3 (ES peer) | **R7-PE3** (10.10.10.7) |
 | PE2 (observer) | **R6-PE2** (10.10.10.6) |
 
-When the EVPN guide shows verification output with `10.10.10.1` or `10.10.10.3` as PE loopbacks, substitute **10.10.10.5** and **10.10.10.7** respectively.
+The guide's verification outputs already use `10.10.10.5`–`10.10.10.8` for PE1–PE4, so they can be compared with your router output directly — no substitution needed.
 
 ## Provider core (reference)
 
@@ -43,7 +43,8 @@ When the EVPN guide shows verification output with `10.10.10.1` or `10.10.10.3` 
 
 | Labs | Routers you configure |
 |------|----------------------|
-| Labs 1–3 (SR) | R1-P1, R5-PE1, R9-CE1 |
-| Labs 4–5 (EVPN) | Primarily R5-PE1; R9-CE1 for access; R7-PE3 for multi-homing |
+| Labs 1–3 (segment routing view) | R1-P1, R5-PE1, R9-CE1 |
+| Lab 4 (EVPN view) | R5-PE1; R9-CE1 for the access interface (Exercise 4.1) |
+| Lab 5 (EVPN view) | R5-PE1, R7-PE3 (Ethernet Segment peers) and R9-CE1 (LAG) |
 
 All other routers are preconfigured in the containerlab startup configs.

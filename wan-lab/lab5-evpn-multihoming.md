@@ -1,8 +1,6 @@
-# 🔗 Lab 5: EVPN Multi-homing ELAN
+# 🔗 Lab 5 — Configuration of EVPN multi-homing in ELAN
 
 > **All-active and single-active EVPN Ethernet Segment multi-homing**
-
-Configure LAG-based multi-homing between **R5-PE1** and **R7-PE3** toward **R9-CE1**, explore EVPN MH routes, DF election, aliasing, and failure scenarios.
 
 **Estimated time:** ~150 minutes
 
@@ -10,31 +8,38 @@ Configure LAG-based multi-homing between **R5-PE1** and **R7-PE3** toward **R9-C
 
 ## 📋 Table of Contents
 
-1. [Overview](#overview)
-2. [Router naming reminder](#router-naming-reminder)
-3. [Exercise 5.1 — Configure LAG on access CE](#exercise-51--configure-lag-on-access-ce)
-4. [Exercise 5.2 — Configure MAC-VRF on R5-PE1](#exercise-52--configure-mac-vrf-on-r5-pe1)
-5. [Exercise 5.3 — All-active Ethernet Segment](#exercise-53--all-active-ethernet-segment)
-6. [Exercise 5.4 — EVPN routes for multi-homing](#exercise-54--evpn-routes-for-multi-homing)
-7. [Exercise 5.5 — Default DF election](#exercise-55--default-df-election)
-8. [Exercise 5.6 — Preference-based DF election](#exercise-56--preference-based-df-election)
-9. [Exercise 5.7 — MAC routes in multi-homing](#exercise-57--mac-routes-in-multi-homing)
-10. [Exercise 5.8 — ECMP aliasing](#exercise-58--ecmp-aliasing)
-11. [Exercise 5.9 — ES failure and redundancy](#exercise-59--es-failure-and-redundancy)
-12. [Exercise 5.10 — Single-active mode](#exercise-510--single-active-mode)
-13. [What's Next?](#whats-next)
+1. [Objective](#objective)
+2. [Prerequisites](#prerequisites)
+3. [Router naming reminder](#router-naming-reminder)
+4. [Exercise 5.1 — Configure LAG on Access CE](#exercise-51--configure-lag-on-access-ce)
+5. [Exercise 5.2 — Configure MAC-VRF on PE1](#exercise-52--configure-mac-vrf-on-pe1)
+6. [Exercise 5.3 — Configure an all-active Ethernet Segment and associate LAG with MAC-VRF](#exercise-53--configure-an-all-active-ethernet-segment-and-associate-lag-with-mac-vrf)
+7. [Exercise 5.4 — Explore EVPN routes used for multi-homing](#exercise-54--explore-evpn-routes-used-for-multi-homing)
+8. [Exercise 5.5 — Verify default DF election algorithm](#exercise-55--verify-default-df-election-algorithm)
+9. [Exercise 5.6 — Configure the preference-based DF election algorithm](#exercise-56--configure-the-preference-based-df-election-algorithm)
+10. [Exercise 5.7 — Verify the MAC routes in multi-homing](#exercise-57--verify-the-mac-routes-in-multi-homing)
+11. [Exercise 5.8 — Configure ECMP to enable aliasing](#exercise-58--configure-ecmp-to-enable-aliasing)
+12. [Exercise 5.9 — Examine ES failure and redundancy](#exercise-59--examine-es-failure-and-redundancy)
+13. [Exercise 5.10 — Configure the Ethernet segment for single-active mode](#exercise-510--configure-the-ethernet-segment-for-single-active-mode)
+14. [What's Next?](#whats-next)
 
 ---
 
-## Overview
+## Objective
 
-Deploy Lab 5 before starting:
+The objective of this lab is to configure and verify EVPN multi-homing for an ELAN.
+
+The student will focus on configuring **PE1 (R5-PE1)**, **PE3 (R7-PE3)** and **CE1 (R9-CE1)**. All other PEs and CE2 are preconfigured.
+
+---
+
+## Prerequisites
+
+Load the Lab 5 start configuration via the deployment script before starting the exercises:
 
 ```bash
 ./scripts/deploy-lab.sh 5
 ```
-
-**Student routers:** R5-PE1, R7-PE3, R9-CE1 | **Observer:** R6-PE2
 
 > **Transport:** EVPN services continue to use **SR-ISIS** transport (inherited from Lab 4).
 
@@ -42,18 +47,19 @@ Deploy Lab 5 before starting:
 
 ## Router naming reminder
 
-| EVPN guide | Workshop router | Loopback |
-|------------|-------------------|----------|
+| Lab guide | Workshop router | Loopback |
+|-----------|-----------------|----------|
 | PE1 (MH peer) | **R5-PE1** | 10.10.10.5 |
 | PE2 (observer) | **R6-PE2** | 10.10.10.6 |
 | PE3 (MH peer) | **R7-PE3** | 10.10.10.7 |
 | CE1 | **R9-CE1** | — |
+| CE2 | **R10-CE2** | — |
 
-When the EVPN guide references `10.10.10.1` / `10.10.10.3`, use **10.10.10.5** / **10.10.10.7**.
+The lab guide uses the same loopbacks as this topology (`10.10.10.5`–`10.10.10.8`), so PE addresses in the guide outputs can be read directly.
 
 ---
 
-## Exercise 5.1 — Configure LAG on access CE
+## Exercise 5.1 — Configure LAG on Access CE
 
 Configure LAG on **R9-CE1** toward R5-PE1 and R7-PE3.
 
@@ -86,7 +92,7 @@ commit stay
 
 ---
 
-## Exercise 5.2 — Configure MAC-VRF on R5-PE1
+## Exercise 5.2 — Configure MAC-VRF on PE1
 
 ### Steps
 
@@ -95,7 +101,7 @@ commit stay
 
 ---
 
-## Exercise 5.3 — All-active Ethernet Segment
+## Exercise 5.3 — Configure an all-active Ethernet Segment and associate LAG with MAC-VRF
 
 Configure ESI-1 on **R5-PE1** and **R7-PE3**.
 
@@ -129,7 +135,7 @@ show interface lag1
 
 ---
 
-## Exercise 5.4 — EVPN routes for multi-homing
+## Exercise 5.4 — Explore EVPN routes used for multi-homing
 
 ### Verification (on R6-PE2)
 
@@ -147,7 +153,7 @@ show network-instance mac-vrf-10 protocols bgp-vpn bgp-instance 1
 
 ---
 
-## Exercise 5.5 — Default DF election
+## Exercise 5.5 — Verify default DF election algorithm
 
 ### Verification
 
@@ -164,7 +170,7 @@ show system network-instance ethernet-segments ESI-1 detail
 
 ---
 
-## Exercise 5.6 — Preference-based DF election
+## Exercise 5.6 — Configure the preference-based DF election algorithm
 
 ### Configuration commands
 
@@ -183,7 +189,7 @@ commit stay
 
 ---
 
-## Exercise 5.7 — MAC routes in multi-homing
+## Exercise 5.7 — Verify the MAC routes in multi-homing
 
 ### Verification
 
@@ -199,7 +205,7 @@ show network-instance mac-vrf-10 bridge-table mac-table all
 
 ---
 
-## Exercise 5.8 — ECMP aliasing
+## Exercise 5.8 — Configure ECMP to enable aliasing
 
 ### Configuration commands
 
@@ -216,7 +222,7 @@ commit stay
 
 ---
 
-## Exercise 5.9 — ES failure and redundancy
+## Exercise 5.9 — Examine ES failure and redundancy
 
 ### Steps
 
@@ -226,7 +232,7 @@ commit stay
 
 ---
 
-## Exercise 5.10 — Single-active mode
+## Exercise 5.10 — Configure the Ethernet segment for single-active mode
 
 ### Configuration commands
 

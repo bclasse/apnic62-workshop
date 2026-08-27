@@ -2,7 +2,9 @@
 
 > **Hands-on Nokia SR Linux Segment Routing & EVPN Workshop**
 
-Welcome to the APNIC62 WAN Lab! This workshop provides **five comprehensive guides** covering IS-IS Segment Routing, SR-MPLS traffic engineering, and EVPN-MPLS services on a unified 12-router WAN topology.
+Welcome to the APNIC62 WAN Lab! This workshop provides **five lab guides** covering IS-IS segment routing, SR-MPLS traffic engineering, and EVPN-MPLS services on a unified 12-router WAN topology.
+
+The labs and exercises below mirror *Nokia SR Linux Segment Routing and EVPN for WAN – APNIC62 Workshop Lab Guide* one-for-one.
 
 > **Note:** This workshop uses **SR-ISIS** as the sole MPLS transport. LDP is not used.
 
@@ -10,72 +12,88 @@ Welcome to the APNIC62 WAN Lab! This workshop provides **five comprehensive guid
 
 ## 📚 Workshop Structure
 
-### 🔧 [Lab 1: IS-IS SR + MP-BGP for EVPN](lab1-isis-sr-evpn-bgp.md)
+### 🔧 [Lab 1 — Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN](lab1-isis-sr-evpn-bgp.md)
 
-Configure IS-IS segment routing, MP-BGP EVPN sessions, CE access, and IP-VRF transport over SR-ISIS tunnels.
+Students will log in to their assigned routers, familiarize themselves with the addressing scheme being used in the lab, and proceed to configure IS-IS to support segment routing. Lastly, students will modify the existing IP virtual routing function (VRF) to have it use segment routing transport tunnels.
 
-**What you'll learn:**
-- MPLS label blocks (SRGB, SRLB) for segment routing
-- IS-IS SR node-SIDs and adjacency-SIDs
-- MP-BGP EVPN PE-to-PE sessions
-- IP-VRF transport using SR-ISIS
+| # | Exercise |
+|---|----------|
+| 1.1 | Familiarization with the lab setup |
+| 1.2 | Configure MPLS label blocks for segment routing |
+| 1.3 | Configure IS-IS to support segment routing |
+| 1.4 | Configure MP-BGP for EVPN as the PE-to-PE protocol |
+| 1.5 | Modify an EVPN-MPLS IP-VRF to use IS-IS segment routing transport tunnels |
 
-**Duration:** ~120 minutes
-
----
-
-### 📡 [Lab 2: TE Link Attributes](lab2-te-link-attributes.md)
-
-Configure and advertise traffic engineering link attributes via IS-IS.
-
-**What you'll learn:**
-- Admin groups and SRLGs
-- TE interface membership
-- IS-IS TE database and advertisement
-
-**Duration:** ~45 minutes
+**Student routers:** R1-P1, R5-PE1, R9-CE1 · **Duration:** ~120 minutes
 
 ---
 
-### 🛤️ [Lab 3: Uncolored SR-MPLS TE Policies](lab3-sr-te-policies.md)
+### 📡 [Lab 2 — Configuration and advertisement of traffic engineering link attributes](lab2-te-link-attributes.md)
 
-Build SR-MPLS TE policies with path constraints, BFD, and redundancy.
+The student will configure traffic engineering link attributes, such as admin groups and shared-risk link groups (SRLGs), associate the attributes with the different interfaces, and configure the routing protocol to advertise the additional link information.
 
-**What you'll learn:**
-- Uncolored SR-MPLS TE policies (IGP and TE metrics)
-- Explicit paths, excluded hops, and BSID label blocks
-- Secondary paths with SRLG diversity
-- IP-VRF over TE policy transport
+| # | Exercise |
+|---|----------|
+| 2.1 | Configure traffic engineering link attributes |
+| 2.2 | Add interfaces to the traffic engineering contexts |
+| 2.3 | Enable IS-IS to advertise traffic engineering information |
 
-**Duration:** ~180 minutes
-
----
-
-### 🔀 [Lab 4: EVPN ELAN](lab4-evpn-elan.md)
-
-Deploy a Layer 2 EVPN ELAN service using SR-ISIS transport.
-
-**What you'll learn:**
-- EVPN service and ES label ranges
-- MAC-VRF with SR-ISIS transport (no LDP)
-- EVPN route verification (RT-2, RT-3)
-- Proxy-ARP for MAC-VRF
-
-**Duration:** ~90 minutes
+**Student routers:** R1-P1, R5-PE1, R9-CE1 · **Duration:** ~45 minutes
 
 ---
 
-### 🔗 [Lab 5: EVPN Multi-homing ELAN](lab5-evpn-multihoming.md)
+### 🛤️ [Lab 3 — Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy)](lab3-sr-te-policies.md)
 
-Configure all-active and single-active EVPN multi-homing.
+Students will create segment routing tunnels, also known as label switched paths, that satisfy traffic engineering constraints, then modify the existing IP-VRF to have it use SR-TE transport tunnels.
 
-**What you'll learn:**
-- LAG and Ethernet Segments on R5-PE1 + R7-PE3
-- EVPN A-D and ES routes
-- DF election (default and preference-based)
-- ECMP aliasing and ES failure scenarios
+| # | Exercise |
+|---|----------|
+| 3.1 | Configure an uncolored SR-MPLS TE policy that uses IGP metrics |
+| 3.2 | Configure a dedicated MPLS label range for the binding SID (BSID) |
+| 3.3 | Configure an uncolored SR-MPLS TE policy that uses explicit paths |
+| 3.4 | Modify the TE policy to use TE metrics |
+| 3.5 | Verify label stack reduction for a TE policy |
+| 3.6 | Configure a TE policy with excluded hops |
+| 3.7 | Configure a TE policy with seamless BFD |
+| 3.8 | Configure a TE policy with a secondary path for redundancy, ensuring path diversity through SRLGs |
+| 3.9 | Modify the IP-VRF to use TE policy transport tunnels |
 
-**Duration:** ~150 minutes
+**Student routers:** R1-P1, R5-PE1, R9-CE1 · **Duration:** ~180 minutes
+
+---
+
+### 🔀 [Lab 4 — Configuration of EVPN ELAN](lab4-evpn-elan.md)
+
+Configure a Layer 2 EVPN ELAN on the PE routers. BGP-EVPN is used in the control plane, and MPLS is used for data encapsulation. The student focuses on PE1; all other PEs and CEs are preconfigured unless otherwise specified.
+
+| # | Exercise |
+|---|----------|
+| 4.1 | Configure CE1 Interface |
+| 4.2 | Configure EVPN-MPLS MAC-VRF |
+| 4.3 | Enable proxy-ARP for MAC-VRF |
+
+**Student routers:** R5-PE1, R9-CE1 · **Duration:** ~90 minutes
+
+---
+
+### 🔗 [Lab 5 — Configuration of EVPN multi-homing in ELAN](lab5-evpn-multihoming.md)
+
+Configure and verify EVPN multi-homing for an ELAN. The student focuses on PE1, PE3 and CE1; all other PEs and CE2 are preconfigured.
+
+| # | Exercise |
+|---|----------|
+| 5.1 | Configure LAG on Access CE |
+| 5.2 | Configure MAC-VRF on PE1 |
+| 5.3 | Configure an all-active Ethernet Segment and associate LAG with MAC-VRF |
+| 5.4 | Explore EVPN routes used for multi-homing |
+| 5.5 | Verify default DF election algorithm |
+| 5.6 | Configure the preference-based DF election algorithm |
+| 5.7 | Verify the MAC routes in multi-homing |
+| 5.8 | Configure ECMP to enable aliasing |
+| 5.9 | Examine ES failure and redundancy |
+| 5.10 | Configure the Ethernet segment for single-active mode |
+
+**Student routers:** R5-PE1, R7-PE3, R9-CE1 · **Observer:** R6-PE2 · **Duration:** ~150 minutes
 
 ---
 
@@ -85,9 +103,23 @@ Before starting, ensure you have:
 
 - Linux host (or WSL2) with **Docker** and **[containerlab](https://containerlab.dev/)**
 - **Nokia SR Linux license file** at `srl-license/srlinux.license` (provided by workshop organizers)
-- SR Linux image: `ghcr.io/nokia/srlinux:25.10`
+- SR Linux image: `ghcr.io/nokia/srlinux:26.7`
 - **~24–36 GB RAM** and **12+ vCPUs** for 12× IXR-X1B nodes
 - Basic understanding of IS-IS, BGP, MPLS, and EVPN concepts
+
+---
+
+## 📋 Preliminary instructions
+
+**1. Lab routers**
+
+Load the start configuration of each lab via the deployment script before working on it. After loading the configuration, the student usually manages three routers — **R1-P1**, **R5-PE1** and **R9-CE1**; the other routers are preconfigured. Each lab has its own start configuration, applied by `./scripts/deploy-lab.sh <N>`.
+
+**2. Lab exercises**
+
+- EVPN RT-2 route advertisements are removed when the route is idle for more than **300 seconds**. Repeat the ping in an exercise to refresh the EVPN route entries if needed.
+- Some SR Linux CLI outputs in the guide have columns omitted for readability.
+- Use `enter candidate` to enter configuration mode, and `commit stay` to validate and apply changes while staying in candidate mode.
 
 ---
 
@@ -123,7 +155,11 @@ ssh admin@clab-apnic62-wan-lab-r9-ce1
 
 ---
 
-## 📖 Lab Topology
+## 📖 Lab environments
+
+The guide presents these routers through two views.
+
+**Segment routing lab environment** (Labs 1, 2 and 3) — 12 × 7250 IXR routers: four CE, four PE, four P.
 
 ```
      R1-P1 ─── R5-PE1 ─── R9-CE1
@@ -135,9 +171,20 @@ ssh admin@clab-apnic62-wan-lab-r9-ce1
      R4-P4 ─── R8-PE4
 ```
 
+**EVPN lab environment** (Labs 4 and 5) — six of the same routers. PE1–PE4 are R5–R8 and keep their segment routing `system0.0` addresses:
+
+| Lab guide name | Router | Loopback |
+|----------------|--------|----------|
+| PE1 | R5-PE1 | 10.10.10.5/32 |
+| PE2 | R6-PE2 | 10.10.10.6/32 |
+| PE3 | R7-PE3 | 10.10.10.7/32 |
+| PE4 | R8-PE4 | 10.10.10.8/32 |
+| CE1 | R9-CE1 | — |
+| CE2 | R10-CE2 | — |
+
 - **Underlay:** IS-IS L2, SR-ISIS MPLS transport
 - **Overlay:** MP-BGP EVPN (AS 65530) among PE routers
-- **Details:** [Topology and addressing](../docs/topology.md) | [Router naming](../docs/router-naming.md)
+- **Details:** [Topology and addressing](../docs/topology.md) | [Lab guide router mapping](../docs/router-naming.md)
 
 ---
 
@@ -168,8 +215,8 @@ clab deploy -t apnic62-wan-lab.clab.yml --reconfigure
 2. Verify your license file and containerlab deployment (`clab inspect`)
 3. Run `./scripts/verify-lab.sh <N>` for a quick smoke check
 4. If deploy fails, run `./scripts/collect-deploy-diagnostics.sh <N>` and check `docker logs clab-apnic62-wan-lab-r1-p1`
-4. Ask your lab instructor
+5. Ask your lab instructor
 
 ---
 
-**Ready to begin?** 🎯 Head to [Lab 1: IS-IS SR + MP-BGP for EVPN](lab1-isis-sr-evpn-bgp.md)
+**Ready to begin?** 🎯 Head to [Lab 1 — Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN](lab1-isis-sr-evpn-bgp.md)

@@ -2,6 +2,8 @@
 
 Hands-on workshop covering **Segment Routing**, **SR-MPLS traffic engineering**, and **EVPN-MPLS** on Nokia SR Linux — delivered at APNIC62.
 
+This repository is the containerlab companion to the printed guide *Nokia SR Linux Segment Routing and EVPN for WAN – APNIC62 Workshop Lab Guide*. The five labs and their exercises follow the guide exactly.
+
 ## Quick start
 
 ```bash
@@ -15,17 +17,26 @@ ssh admin@clab-apnic62-wan-lab-r5-pe1
 
 Default credentials: `admin` / `NokiaSrl1!`
 
+Run `./scripts/deploy-lab.sh <N>` to load lab **N**'s start configuration before beginning that lab.
+
 ## Lab guides
 
-| Lab | Topic | Duration |
-|-----|-------|----------|
-| [Lab 1](wan-lab/lab1-isis-sr-evpn-bgp.md) | IS-IS Segment Routing + MP-BGP for EVPN | ~120 min |
-| [Lab 2](wan-lab/lab2-te-link-attributes.md) | TE Link Attributes | ~30 min |
-| [Lab 3](wan-lab/lab3-sr-te-policies.md) | Uncolored SR-MPLS TE Policies | ~180 min |
-| [Lab 4](wan-lab/lab4-evpn-elan.md) | EVPN ELAN | ~90 min |
-| [Lab 5](wan-lab/lab5-evpn-multihoming.md) | EVPN Multi-homing ELAN | ~120 min |
+| Lab | Title | Exercises | Duration |
+|-----|-------|-----------|----------|
+| [Lab 1](wan-lab/lab1-isis-sr-evpn-bgp.md) | Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN | 1.1 – 1.5 | ~120 min |
+| [Lab 2](wan-lab/lab2-te-link-attributes.md) | Configuration and advertisement of traffic engineering link attributes | 2.1 – 2.3 | ~45 min |
+| [Lab 3](wan-lab/lab3-sr-te-policies.md) | Configuration of segment routing tunnels with traffic engineering (uncolored SR-MPLS TE policy) | 3.1 – 3.9 | ~180 min |
+| [Lab 4](wan-lab/lab4-evpn-elan.md) | Configuration of EVPN ELAN | 4.1 – 4.3 | ~90 min |
+| [Lab 5](wan-lab/lab5-evpn-multihoming.md) | Configuration of EVPN multi-homing in ELAN | 5.1 – 5.10 | ~150 min |
 
 **Start here:** [wan-lab/README.md](wan-lab/README.md)
+
+## Lab environments
+
+The guide presents the same 12 routers through two views:
+
+- **Segment routing lab environment** — 12 × 7250 IXR routers (four CE, four PE, four P). Used by all of Labs 1, 2 and 3.
+- **EVPN lab environment** — six of the same routers. PE1–PE4 are the segment routing view's provider edge routers R5–R8 and keep their `system0.0` addresses, so the loopbacks run `10.10.10.5/32`–`10.10.10.8/32`.
 
 ## Prerequisites
 
@@ -37,5 +48,4 @@ Default credentials: `admin` / `NokiaSrl1!`
 ## Documentation
 
 - [Topology and addressing](docs/topology.md)
-- [SR/EVPN router mapping](docs/router-naming.md)
-
+- [Lab guide router mapping](docs/router-naming.md)

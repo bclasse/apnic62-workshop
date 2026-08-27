@@ -1,8 +1,6 @@
-# 🔧 Lab 1: IS-IS Segment Routing + MP-BGP for EVPN
+# 🔧 Lab 1 — Configuration of IS-IS to support Segment Routing and MP-BGP sessions for EVPN
 
 > **Foundation: SR underlay and EVPN control plane**
-
-Configure IS-IS segment routing on the provider core, establish MP-BGP EVPN sessions among PE routers, connect the CE, and switch IP-VRF transport to SR-ISIS tunnels.
 
 **Estimated time:** ~120 minutes
 
@@ -10,28 +8,21 @@ Configure IS-IS segment routing on the provider core, establish MP-BGP EVPN sess
 
 ## 📋 Table of Contents
 
-1. [Overview](#overview)
+1. [Objective](#objective)
 2. [Prerequisites](#prerequisites)
-3. [Exercise 1.1 — Lab familiarization](#exercise-11--lab-familiarization)
-4. [Exercise 1.2 — MPLS label blocks for SR](#exercise-12--mpls-label-blocks-for-sr)
-5. [Exercise 1.3 — IS-IS segment routing](#exercise-13--isis-segment-routing)
-6. [Exercise 1.4 — MP-BGP EVPN sessions](#exercise-14--mp-bgp-evpn-sessions)
-7. [Exercise 1.5 — CE access interface](#exercise-15--ce-access-interface)
-8. [Exercise 1.6 — IP-VRF over SR-ISIS tunnels](#exercise-16--ip-vrf-over-sr-isis-tunnels)
-9. [Troubleshooting](#troubleshooting)
-10. [What's Next?](#whats-next)
+3. [Exercise 1.1 — Familiarization with the lab setup](#exercise-11--familiarization-with-the-lab-setup)
+4. [Exercise 1.2 — Configure MPLS label blocks for segment routing](#exercise-12--configure-mpls-label-blocks-for-segment-routing)
+5. [Exercise 1.3 — Configure IS-IS to support segment routing](#exercise-13--configure-is-is-to-support-segment-routing)
+6. [Exercise 1.4 — Configure MP-BGP for EVPN as the PE-to-PE protocol](#exercise-14--configure-mp-bgp-for-evpn-as-the-pe-to-pe-protocol)
+7. [Exercise 1.5 — Modify an EVPN-MPLS IP-VRF to use IS-IS segment routing transport tunnels](#exercise-15--modify-an-evpn-mpls-ip-vrf-to-use-is-is-segment-routing-transport-tunnels)
+8. [Troubleshooting](#troubleshooting)
+9. [What's Next?](#whats-next)
 
 ---
 
-## Overview
+## Objective
 
-In this lab you will:
-
-- Verify the 12-router WAN topology addressing on **R1-P1**, **R5-PE1**, and **R9-CE1**
-- Configure MPLS label blocks and IS-IS segment routing on R1-P1 and R5-PE1
-- Configure MP-BGP EVPN on R5-PE1 toward the other PE routers
-- Configure the CE access interface on R9-CE1
-- Modify the preconfigured `ip-vrf-symm` service to use SR-ISIS transport tunnels
+Students will log in to their assigned routers, familiarize themselves with the addressing scheme being used in the lab, and proceed to configure IS-IS to support segment routing. Lastly, students will modify the existing IP virtual routing function (VRF) to have it use segment routing transport tunnels.
 
 **Student routers:** R1-P1, R5-PE1, R9-CE1 (all others preconfigured)
 
@@ -39,38 +30,48 @@ In this lab you will:
 
 ## Prerequisites
 
-- Lab 1 deployed: `./scripts/deploy-lab.sh 1`
+Load the start configuration of this lab via the deployment script before proceeding:
+
+```bash
+./scripts/deploy-lab.sh 1
+```
+
 - SSH access to `r1-p1`, `r5-pe1`, `r9-ce1`
-- Familiarity with SR Linux `enter candidate` / `commit stay` workflow
+- Familiarity with the SR Linux `enter candidate` / `commit stay` workflow
 
 ---
 
-## Exercise 1.1 — Lab familiarization
+## Exercise 1.1 — Familiarization with the lab setup
 
-Connect to R1-P1, R5-PE1, and R9-CE1. Verify interfaces and IS-IS adjacencies.
+Connect to R1-P1, R5-PE1, and R9-CE1. Use the `show` and `info` commands to verify that the system and physical interfaces have been properly configured and are operational, and that IS-IS is distributing routing information among the P and PE routers.
 
 ### Verification commands
 
 ```bash
-show network-instance default interfaces *
+show /network-instance default interfaces *
 info /network-instance default protocols isis
-show network-instance default protocols isis adjacency
-show network-instance default route-table ipv4-unicast summary
+show /network-instance default protocols isis adjacency
+show /network-instance default protocols isis database
+show /network-instance default route-table ipv4-unicast summary
 ```
 
 ### Steps
 
-1. On each router, verify `system0.0` uses `10.10.10.x/32` where **x** is the router number.
-2. Verify point-to-point links use `10.x.y.z/27` addressing (see [topology](../docs/topology.md)).
+1. Connect to the three routers **R1-P1**, **R5-PE1** and **R9-CE1**.
+2. On each router, display the interfaces in `network-instance default`:
+   - a. Verify `system0.0` uses `10.10.10.x/32`, where **x** is the router number (R1-P1 → `10.10.10.1/32`).
+   - b. Verify the point-to-point interfaces use `10.x.y.z/27`, where **x** is the lower router number, **y** the higher and **z** this router's number (the R2–R6 link is `10.2.6.2/27` on R2 and `10.2.6.6/27` on R6). There should be **five** physical interfaces on R1-P1, **two** on R5-PE1 and **one** on R9-CE1, all operational.
 3. On **R1-P1**, verify **five** IS-IS adjacencies are up.
-4. On **R5-PE1**, verify **two** IS-IS adjacencies are up (to R1-P1 and one other P router).
-5. Display the IS-IS link-state database and IPv4 route table on R1-P1.
+4. On **R5-PE1**, verify **two** IS-IS adjacencies are up (to R1-P1 and R2-P2).
+5. Display the IS-IS link-state database and the IPv4 route table on R1-P1.
+
+See [topology and addressing](../docs/topology.md) for the full address plan.
 
 ---
 
-## Exercise 1.2 — MPLS label blocks for SR
+## Exercise 1.2 — Configure MPLS label blocks for segment routing
 
-Configure SRGB and SRLB label ranges on R1-P1 and R5-PE1.
+Configure two MPLS label blocks on R1-P1 and R5-PE1: the segment routing global block (SRGB) for global segments such as prefix and node SIDs, and the segment routing label block (SRLB) for local segments such as adjacency SIDs. SR-MPLS is supported only on the default network-instance.
 
 ### Configuration commands
 
@@ -89,13 +90,15 @@ info from state /system mpls label-ranges
 
 ### Steps
 
-1. On **R1-P1** and **R5-PE1**, configure static shared SRGB `srgb-range-1` [16001–16999].
-2. On both routers, configure dynamic SRLB `srlb-dynamic-isis` [15001–15999].
+1. On **R1-P1** and **R5-PE1**, configure a **static**, **shared** SRGB range named `srgb-range-1` [16001–16999].
+2. On both routers, configure a **dynamic** SRLB range named `srlb-dynamic-isis` [15001–15999].
 3. Verify both ranges show `status ready`.
+
+> **Note:** the output on R5-PE1 displays additional ranges required for other applications, such as EVPN and network-instance services. Those ranges are preconfigured — Lab 4 and Lab 5 rely on them.
 
 ---
 
-## Exercise 1.3 — IS-IS segment routing
+## Exercise 1.3 — Configure IS-IS to support segment routing
 
 Enable IS-IS to advertise segment routing information.
 
@@ -123,16 +126,16 @@ show network-instance default route-table mpls
 1. Assign `srgb-range-1` to the SR global block on both routers.
 2. Assign `srlb-dynamic-isis` to the IS-IS dynamic label block.
 3. Enable dynamic adjacency SIDs on all IS-IS interfaces.
-4. Configure a node SID on `system0.0` with index equal to the router number (1 on R1, 5 on R5).
+4. Configure a node SID on `system0.0` with index equal to the router number (1 on R1-P1, 5 on R5-PE1).
 5. Verify the SID database shows prefix-SIDs for all P/PE loopbacks.
 6. On R1-P1, verify SR-ISIS tunnels to remote node SIDs and adjacency SIDs.
-7. Examine IS-IS LSP TLVs for SR capabilities on R5-PE1's LSP.
+7. Examine the IS-IS LSP TLVs for SR capabilities in R5-PE1's LSP.
 
 ---
 
-## Exercise 1.4 — MP-BGP EVPN sessions
+## Exercise 1.4 — Configure MP-BGP for EVPN as the PE-to-PE protocol
 
-Configure MP-BGP for EVPN on **R5-PE1** toward R6-PE2, R7-PE3, and R8-PE4.
+Configure MP-BGP sessions that support the exchange of EVPN routes between provider core PE routers. The student configures **R5-PE1**; the other PE routers are preconfigured.
 
 ### Configuration commands
 
@@ -161,56 +164,20 @@ show network-instance default protocols bgp neighbor
 
 ### Steps
 
-1. Configure BGP AS **65530**, router-id **10.10.10.5**.
-2. Enable EVPN AFI/SAFI with MPLS encapsulation and rapid-update.
-3. Create BGP neighbors to **10.10.10.6**, **10.10.10.7**, **10.10.10.8** in group `evpn`.
-4. Verify three established EVPN BGP sessions.
+1. Enter configuration mode with `enter candidate`.
+2. Configure MP-BGP sessions to all the other PE routers: autonomous system **65530**, router ID = `system0.0` address (**10.10.10.5**), peer AS **65530**, transport local address = `system0.0`, `afi-safi evpn`, default received encapsulation **mpls**.
+3. Enable **rapid-update** for the EVPN family so EVPN routes are transmitted immediately to BGP peers.
+4. Enable **rapid-withdrawal** for BGP route advertisement so withdrawals are sent immediately.
+5. Enable the BGP protocol and `commit stay`.
+6. Verify R5-PE1 has established **three** MP-BGP EVPN sessions — to **10.10.10.6**, **10.10.10.7** and **10.10.10.8**.
 
 ---
 
-## Exercise 1.5 — CE access interface
+## Exercise 1.5 — Modify an EVPN-MPLS IP-VRF to use IS-IS segment routing transport tunnels
 
-Configure the access interface on **R9-CE1** toward R5-PE1.
-
-### Configuration commands
-
-```bash
-enter candidate
-/interface ethernet-1/1 vlan-tagging true
-/interface ethernet-1/1 ethernet mac-address 00:00:00:99:02:01
-/interface ethernet-1/1 subinterface 10 type routed
-/interface ethernet-1/1 subinterface 10 admin-state enable
-/interface ethernet-1/1 subinterface 10 ipv4 admin-state enable
-/interface ethernet-1/1 subinterface 10 ipv4 address 192.168.1.1/24
-/interface ethernet-1/1 subinterface 10 vlan encap single-tagged vlan-id 10
-/network-instance default interface ethernet-1/1.10
-commit stay
-```
-
-### Verification
-
-```bash
-show interface ethernet-1/1
-ping 192.168.1.2 network-instance default -c 3
-```
-
-### Steps
-
-1. On R9-CE1, configure `ethernet-1/1.10` as routed with VLAN 10 and IP **192.168.1.1/24**.
-2. On R5-PE1, verify the preconfigured `ethernet-1/2.10` bridged subinterface toward CE (VLAN 10).
-3. Verify interface operational state on both sides.
-
-> CE-to-CE connectivity is not expected until EVPN services are configured in Lab 4.
-
----
-
-## Exercise 1.6 — IP-VRF over SR-ISIS tunnels
-
-Verify the preconfigured `ip-vrf-symm` on R5-PE1 uses SR-ISIS transport.
+Modify the preconfigured EVPN-MPLS L3 service on R5-PE1 to use IS-IS segment routing transport tunnels.
 
 ### Configuration commands
-
-The startup config already includes SR-ISIS tunnel resolution. To configure manually:
 
 ```bash
 enter candidate
@@ -230,22 +197,25 @@ ping network-instance ip-vrf-symm <remote-ip> -I 172.16.1.1
 ### Steps
 
 1. On R5-PE1, run LSP-ping to remote PE loopbacks via SR-ISIS.
-2. Verify `ip-vrf-symm` allows **sr-isis** tunnel type for next-hop resolution.
-3. Verify IP-VRF routes and end-to-end ping across the IP-VRF service.
+2. Set `allowed-tunnel-types [sr-isis]` for next-hop resolution on `ip-vrf-symm`.
+3. Verify the IP-VRF routes and end-to-end ping across the IP-VRF service.
 
 ---
 
 ## Troubleshooting
 
 **IS-IS adjacencies down**
+
 - Check interface `admin-state` and IPv4 addressing on both ends.
 - Verify matching IS-IS NET area `49.0001`.
 
 **SR tunnels missing**
+
 - Confirm SRGB/SRLB label ranges are `ready`.
-- Verify node SID index matches router number.
+- Verify the node SID index matches the router number.
 
 **BGP EVPN sessions not established**
+
 - Confirm router-id and transport local-address use `10.10.10.5`.
 - Verify remote PE routers are reachable via IS-IS.
 
@@ -253,6 +223,6 @@ ping network-instance ip-vrf-symm <remote-ip> -I 172.16.1.1
 
 ## What's Next?
 
-Continue to **[Lab 2: TE Link Attributes](lab2-te-link-attributes.md)** — configure traffic engineering link attributes and IS-IS TE advertisement.
+Continue to **[Lab 2 — Configuration and advertisement of traffic engineering link attributes](lab2-te-link-attributes.md)**.
 
 **[Back to lab index](README.md)**
