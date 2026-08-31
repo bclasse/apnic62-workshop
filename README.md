@@ -31,6 +31,10 @@ Run `./scripts/deploy-lab.sh <N>` to load lab **N**'s start configuration before
 
 **Start here:** [wan-lab/README.md](wan-lab/README.md)
 
+## Containerlab workshop
+
+New to Containerlab? [`containerlab/`](containerlab/README.md) is a seven-activity introduction to the tool itself — installation, topology management, the VS Code extension, startup configuration and licensing, generic node configuration, traffic capture, and a telemetry lab. Work through it first if the labs above will be your first time with Containerlab.
+
 ## Lab environments
 
 The guide presents the same 12 routers through two views:

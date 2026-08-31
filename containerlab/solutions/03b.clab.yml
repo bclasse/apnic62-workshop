@@ -1,0 +1,19 @@
+name: 03-startup
+
+topology:
+  defaults:
+    kind: nokia_srlinux
+  kinds:
+    nokia_srlinux:
+      image: ghcr.io/nokia/srlinux:25.10.1
+
+  nodes:
+    leaf1:
+      startup-config: configs/leaf1.cfg
+      type: ixr-d2l
+    leaf2:
+      startup-config: configs/leaf2.cfg
+      type: ixr-d2l
+
+  links:
+    - endpoints: [ "leaf1:e1-1", "leaf2:e1-1" ]

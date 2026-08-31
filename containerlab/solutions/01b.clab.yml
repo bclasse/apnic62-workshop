@@ -1,0 +1,13 @@
+name: 01-init-1b
+
+topology:
+  nodes:
+    leaf1:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux:25.10.1
+    leaf2:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux:25.10.1
+
+  links:
+    - endpoints: ["leaf1:e1-1", "leaf2:e1-2"]

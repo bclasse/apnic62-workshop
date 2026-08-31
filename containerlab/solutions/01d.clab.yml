@@ -1,0 +1,16 @@
+name: 01-init-1d
+
+topology:
+  defaults:
+    kind: nokia_srlinux
+  kinds:
+    nokia_srlinux:
+      image: ghcr.io/nokia/srlinux:25.10.1
+      type: ixr-d3l
+  nodes:
+    leaf1:
+    leaf2:
+      image: ghcr.io/nokia/srlinux:24.10.1
+
+  links:
+    - endpoints: ["leaf1:e1-1", "leaf2:e1-1"]

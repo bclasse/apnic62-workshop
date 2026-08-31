@@ -1,0 +1,11 @@
+name: 01-init
+
+topology:
+  nodes:
+    leaf1:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux:25.10.1
+
+# Not relevant for task 1a
+#  links:
+#    - endpoints: ["leaf1:e1-1", ""]
