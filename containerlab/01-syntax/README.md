@@ -62,7 +62,7 @@ In this step, you will deploy a basic single-node topology, inspect the paramete
     * **Check management interface:** Verify the status and configuration of the management interface.
 
         ```bash
-        show interface management
+        show interface mgmt0
         ```
 
         *Expected:* The management interface should be up and configured.
