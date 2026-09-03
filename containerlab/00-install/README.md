@@ -1,7 +1,7 @@
 # Containerlab Workshop: Activity 0 - Environment deployment
 
 1. **Containerlab and Docker installation**
-Execute the following command:
+Containerlab is already installed on this platform! But if you had to install it, this one-line command can be used:
 
     ```bash
     curl -sL https://containerlab.dev/setup | sudo -E bash -s "all"
