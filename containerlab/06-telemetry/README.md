@@ -127,7 +127,7 @@ The panels for the flow plugin has been autocreated by the [clab-io-draw](https:
 
 Using containerlab's ability to expose ports of the containers to the host, the following services are available on the host machine:
 
-* Grafana: <http://localhost:3000>. Anonymous access is enabled; no credentials are required. If you want to act as an admin, use `admin/admin` credentials.
+* Grafana: <http://localhost:3000>. Anonymous access is enabled; no credentials are required. In the workshop portal, open Grafana from the **Grafana** link on your lab card instead (the lab shell also has it in `$GRAFANA_ROOT_URL`). If you want to act as an admin, use `admin/admin` credentials.
 * Prometheus: <http://localhost:9090/graph>
 
 ## Traffic generation

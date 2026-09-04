@@ -19,6 +19,10 @@ topology:
         GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
         GF_AUTH_ANONYMOUS: 'true'
         GF_AUTH_OAUTH_AUTO_LOGIN: 'true'
+        # Behind the workshop portal Grafana is reached at /proxy/<lab-id>/svc/3000/;
+        # the lab shell exports GRAFANA_ROOT_URL for that. Locally it stays http://localhost:3000/.
+        GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000/}
+        GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     grafana2:
       kind: linux
       image: grafana/grafana:11.2.0
