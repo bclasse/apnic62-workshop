@@ -105,6 +105,8 @@ topology:
         - configs/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
         - configs/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
         - configs/grafana/dashboards:/var/lib/grafana/dashboards
+        # SVGs + YAML for the flow-panel dashboards, served by Grafana at <root_url>/public/flow_panels/
+        - configs/grafana/flow_panels:/usr/share/grafana/public/flow_panels:ro
       ports:
         - 3000:3000
       env:
