@@ -129,13 +129,13 @@ fi
 echo ""
 echo "Lab ${LAB_NUM} deployed. Connect to student routers:"
 if [[ "${LAB_NUM}" == "4" || "${LAB_NUM}" == "5" ]]; then
-  echo "  ssh admin@clab-apnic62-wan-lab-r5-pe1"
-  echo "  ssh admin@clab-apnic62-wan-lab-r7-pe3"
-  echo "  ssh admin@clab-apnic62-wan-lab-r9-ce1"
+  echo "  ssh clab-apnic62-wan-lab-r5-pe1"
+  echo "  ssh clab-apnic62-wan-lab-r7-pe3"
+  echo "  ssh clab-apnic62-wan-lab-r9-ce1"
 else
-  echo "  ssh admin@clab-apnic62-wan-lab-r1-p1"
-  echo "  ssh admin@clab-apnic62-wan-lab-r5-pe1"
-  echo "  ssh admin@clab-apnic62-wan-lab-r9-ce1"
+  echo "  ssh clab-apnic62-wan-lab-r1-p1"
+  echo "  ssh clab-apnic62-wan-lab-r5-pe1"
+  echo "  ssh clab-apnic62-wan-lab-r9-ce1"
 fi
 echo ""
 echo "Default password: NokiaSrl1!"
