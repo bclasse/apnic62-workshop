@@ -52,7 +52,7 @@ show /network-instance default interfaces *
 info /network-instance default protocols isis
 show /network-instance default protocols isis adjacency
 show /network-instance default protocols isis database
-show /network-instance default route-table ipv4-unicast summary
+show /network-instance default ipv4 route
 ```
 
 ### Steps
